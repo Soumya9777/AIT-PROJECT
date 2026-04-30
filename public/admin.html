@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Desk | Dashboard</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="top-header">
+        <div class="top-header-left">
+            <div class="photo-placeholder">ADMIN<br>PHOTO</div>
+            <div class="user-details">
+                <p>Welcome <strong id="userNameDisplay">Admin</strong></p>
+                <p>Logged In as <strong>Administrator</strong></p>
+            </div>
+        </div>
+        <div class="top-header-center">
+            <h1 class="site-title">Student Desk - Admin</h1>
+        </div>
+        <div class="top-header-right">
+            <button id="logoutBtn" class="btn-secondary">Logout</button>
+        </div>
+    </div>
+    
+    <div class="secondary-nav">
+        <span class="red-text">Admin Control Panel</span>
+    </div>
+
+    <div class="main-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <button class="sidebar-btn" onclick="showSection('manageUsersSection')">Manage Users</button>
+            <button class="sidebar-btn" onclick="showSection('faceRegistrationSection')">Register Faces</button>
+        </div>
+
+        <!-- Content Area -->
+        <div class="content-area">
+            
+            <!-- Manage Users Section -->
+            <div id="manageUsersSection">
+                <div class="data-table" style="background-color: #5b9bd5; color: white; text-align: center; font-weight: bold; padding: 10px; border-radius: 4px 4px 0 0;">Create New User</div>
+                <div style="border: 1px solid #5b9bd5; padding: 20px; background-color: #dceaf6; margin-bottom: 20px;">
+                    <form id="addUserForm">
+                        <div class="form-group">
+                            <label>Full Name</label>
+                            <input type="text" id="addName" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Username (Roll No. / ID)</label>
+                            <input type="text" id="addUsername" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Temporary Password</label>
+                            <input type="password" id="addPassword" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Role</label>
+                            <select id="addRole" required>
+                                <option value="student">Student</option>
+                                <option value="faculty">Faculty</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn-primary" style="width: auto;">Create User</button>
+                        <div id="addMsg" class="mt-2 text-center"></div>
+                    </form>
+                </div>
+
+                <div class="data-table" style="background-color: #5b9bd5; color: white; text-align: center; font-weight: bold; padding: 10px; border-radius: 4px 4px 0 0;">User List & Reset Passwords</div>
+                <table class="data-table" id="usersTable">
+                    <thead>
+                        <tr>
+                            <th class="section-header">ID</th>
+                            <th class="section-header">Name</th>
+                            <th class="section-header">Username</th>
+                            <th class="section-header">Role</th>
+                            <th class="section-header">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Users will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Face Registration Section -->
+            <div id="faceRegistrationSection" class="hidden">
+                <div class="data-table" style="background-color: #5b9bd5; color: white; text-align: center; font-weight: bold; padding: 10px; border-radius: 4px 4px 0 0;">Register Face Data</div>
+                <div style="border: 1px solid #5b9bd5; padding: 20px; background-color: #dceaf6;">
+                    <p style="margin-bottom: 10px; font-weight: bold; color: #1f4e79;">Select a user to register their face using the webcam.</p>
+                    <div class="form-group">
+                        <select id="userSelect">
+                            <option value="">Loading users...</option>
+                        </select>
+                    </div>
+                    <button id="startCamBtn" class="btn-primary" style="width: auto;">Start Camera</button>
+                    
+                    <div id="camContainer" class="hidden" style="margin-top: 15px; border: 2px solid #5b9bd5; max-width: 400px;">
+                        <video id="video" autoplay muted style="width: 100%; display: block;"></video>
+                    </div>
+
+                    <button id="captureBtn" class="btn-primary hidden" style="margin-top: 15px; width: auto; background-color: #28a745;">Capture & Save Face</button>
+                    <div id="faceMsg" class="mt-2 text-center" style="font-weight: bold; margin-top: 10px;"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="js/face-api.min.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/admin.js"></script>
+    <script>
+        function showSection(sectionId) {
+            document.getElementById('manageUsersSection').classList.add('hidden');
+            document.getElementById('faceRegistrationSection').classList.add('hidden');
+            document.getElementById(sectionId).classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>

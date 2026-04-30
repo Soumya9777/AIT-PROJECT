@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Desk | Dashboard</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="top-header">
+        <div class="top-header-left">
+            <div class="photo-placeholder">NO PHOTO<br>AVAILABLE</div>
+            <div class="user-details">
+                <p>Welcome <strong id="userNameDisplay">Student</strong></p>
+                <p>Logged In as <strong>Student</strong></p>
+            </div>
+        </div>
+        <div class="top-header-center">
+            <h1 class="site-title">Student Desk</h1>
+        </div>
+        <div class="top-header-right">
+            <button id="logoutBtn" class="btn-secondary">Logout</button>
+        </div>
+    </div>
+    
+    <div class="secondary-nav">
+        <span class="red-text">2025 & 2026 Graduating Batch can Download</span>
+        <span class="blue-text">Placement Registration Process</span>
+        <span class="blue-text">Download Resume Formats</span>
+    </div>
+
+    <div class="main-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <button class="sidebar-btn" onclick="showSection('infoSection')">View Information</button>
+            <button class="sidebar-btn" onclick="showSection('attendanceSection')">View Attendance</button>
+        </div>
+
+        <!-- Content Area -->
+        <div class="content-area">
+            
+            <!-- Information Section -->
+            <div id="infoSection">
+                <div class="data-table" style="background-color: #5b9bd5; color: white; text-align: center; font-weight: bold; padding: 10px; border-radius: 4px 4px 0 0;">Student Details</div>
+                
+                <table class="data-table">
+                    <tr><td colspan="4" class="section-header">Academic Information</td></tr>
+                    <tr class="row-light">
+                        <td class="label">Name</td>
+                        <td colspan="2"><span class="studentNameSpan">Loading...</span></td>
+                        <td rowspan="6" style="width: 150px; text-align: center;">
+                            <div style="width: 120px; height: 140px; border: 2px solid #aaa; border-radius: 8px; background-color: #ccc; margin: 0 auto; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 16px;">
+                                NO PHOTO<br>AVAILABLE
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="row-dark">
+                        <td class="label">Roll Number</td>
+                        <td colspan="2"><span class="studentRollSpan">Loading...</span></td>
+                    </tr>
+                    <tr class="row-light">
+                        <td class="label">Registration Number</td>
+                        <td colspan="2">2401100655</td>
+                    </tr>
+                    <tr class="row-dark">
+                        <td class="label">Batch</td>
+                        <td colspan="2">2024</td>
+                    </tr>
+                    <tr class="row-light">
+                        <td class="label">Branch</td>
+                        <td colspan="2">BTech-CAI</td>
+                    </tr>
+                    <tr class="row-dark">
+                        <td class="label">Blood Group</td>
+                        <td colspan="2">O+</td>
+                    </tr>
+                </table>
+
+                <table class="data-table">
+                    <tr><td colspan="4" class="section-header">Admission Details</td></tr>
+                    <tr class="row-light">
+                        <td class="label">Admission Year</td>
+                        <td>2024</td>
+                        <td class="label">Admission Type</td>
+                        <td>Regular</td>
+                    </tr>
+                    <tr class="row-dark">
+                        <td class="label">Admission Number</td>
+                        <td colspan="3"></td>
+                    </tr>
+                </table>
+
+                <table class="data-table">
+                    <tr><td colspan="4" class="section-header">Mailing Address</td></tr>
+                    <tr class="row-light">
+                        <td class="label">Address</td>
+                        <td>MAIN ROAD, GOPALPUR</td>
+                        <td class="label">City</td>
+                        <td>GOPALPUR</td>
+                    </tr>
+                    <tr class="row-dark">
+                        <td class="label">District</td>
+                        <td>GANJAM</td>
+                        <td class="label">State</td>
+                        <td>ODISHA</td>
+                    </tr>
+                    <tr class="row-light">
+                        <td class="label">Pin</td>
+                        <td>761002</td>
+                        <td class="label">Phone</td>
+                        <td>8328992422</td>
+                    </tr>
+                    <tr class="row-dark">
+                        <td class="label">Mobile Number</td>
+                        <td colspan="3">9777381321</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Attendance Section (Hidden by Default) -->
+            <div id="attendanceSection" class="hidden">
+                <div class="data-table" style="background-color: #5b9bd5; color: white; text-align: center; font-weight: bold; padding: 10px; border-radius: 4px 4px 0 0;">Attendance Log (Face Recognition)</div>
+                <table class="data-table" id="reportsTable">
+                    <thead>
+                        <tr>
+                            <th class="section-header">Subject</th>
+                            <th class="section-header">Time</th>
+                            <th class="section-header">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Populated via JS -->
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script src="js/student.js"></script>
+    <script>
+        function showSection(sectionId) {
+            document.getElementById('infoSection').classList.add('hidden');
+            document.getElementById('attendanceSection').classList.add('hidden');
+            document.getElementById(sectionId).classList.remove('hidden');
+        }
+
+        // Fetch session to update name/roll dynamically
+        fetch('/api/session').then(res => res.json()).then(data => {
+            if (data && data.name) {
+                document.querySelectorAll('.studentNameSpan').forEach(el => el.textContent = data.name.toUpperCase());
+                document.querySelectorAll('.studentRollSpan').forEach(el => el.textContent = data.username);
+            }
+        });
+    </script>
+</body>
+</html>
