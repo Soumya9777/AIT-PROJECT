@@ -42,10 +42,26 @@ function initDb() {
         db.run(`CREATE TABLE IF NOT EXISTS attendance_sessions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             faculty_id INTEGER,
+            section_name TEXT,
+            topic TEXT,
             subject TEXT,
-            start_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+            start_time TIME,
+            end_time TIME,
+            session_token TEXT,
+            last_qr_time DATETIME,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             status TEXT DEFAULT 'active',
             FOREIGN KEY(faculty_id) REFERENCES users(id)
+        )`, () => {
+            // Add subject column if not exists (for existing databases)
+            db.run(`ALTER TABLE attendance_sessions ADD COLUMN subject TEXT`, () => {});
+        });
+
+        // Subjects Table
+        db.run(`CREATE TABLE IF NOT EXISTS subjects (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT UNIQUE NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )`);
 
         // Attendance Records Table

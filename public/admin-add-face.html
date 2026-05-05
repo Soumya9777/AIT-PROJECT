@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Face | Admin Portal</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="js/face-api.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Add Face Data</h1>
+            <a href="admin.html" class="btn-secondary">Back</a>
+        </header>
+
+        <div class="card">
+            <form id="addFaceForm">
+                <div class="form-group">
+                    <label>Select User</label>
+                    <select id="faceUserId" class="form-control"></select>
+                </div>
+                <div class="form-group">
+                    <label>Capture Face</label><br>
+                    <video id="faceVideo" width="320" height="240" autoplay></video>
+                    <canvas id="faceCanvas" style="display:none;"></canvas><br>
+                    <button type="button" onclick="captureFace()" class="btn-secondary">Capture Face</button>
+                </div>
+                <button type="submit" class="btn-primary">Save Face Data</button>
+                <div id="faceMsg" class="hidden"></div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let faceDescriptor = null;
+
+        (async () => {
+            const res = await fetch('/api/session');
+            const data = await res.json();
+            if (!data.role || data.role !== 'admin') location.href = '/';
+
+            await Promise.all([
+                faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
+                faceapi.nets.faceRecognitionNet.loadFromUri('/models'),
+                faceapi.nets.faceLandmark68Net.loadFromUri('/models')
+            ]);
+
+            const video = document.getElementById('faceVideo');
+            const stream = await navigator.mediaDevices.getUserMedia({video: {}});
+            video.srcObject = stream;
+
+            const usersRes = await fetch('/api/users/without-faces');
+            const users = await usersRes.json();
+            const select = document.getElementById('faceUserId');
+            select.innerHTML = users.map(u => `<option value="${u.id}">${u.name} (${u.role})</option>`).join('');
+        })();
+
+        async function captureFace() {
+            const video = document.getElementById('faceVideo');
+            const canvas = document.getElementById('faceCanvas');
+            canvas.width = video.width;
+            canvas.height = video.height;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            
+            const detection = await faceapi.detectSingleFace(canvas, new faceapi.TinyFaceDetectorOptions())
+                .withFaceLandmarks()
+                .withFaceDescriptor();
+            
+            if (detection) {
+                faceDescriptor = Array.from(detection.descriptor);
+                alert('Face captured!');
+            } else {
+                alert('No face detected. Try again.');
+            }
+        }
+
+        document.getElementById('addFaceForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!faceDescriptor) return alert('Capture face first!');
+            
+            const res = await fetch('/api/faces', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    userId: faceUserId.value,
+                    descriptor: faceDescriptor
+                })
+            });
+            
+            const msgEl = document.getElementById('faceMsg');
+            if (res.ok) {
+                msgEl.textContent = 'Face data saved!';
+                msgEl.className = 'text-success';
+                faceDescriptor = null;
+            } else {
+                msgEl.textContent = 'Error saving face data';
+                msgEl.className = 'text-danger';
+            }
+            msgEl.classList.remove('hidden');
+        });
+    </script>
+</body>
+</html>

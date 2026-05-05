@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Users | Admin Portal</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Manage Users</h1>
+            <a href="admin.html" class="btn-secondary">Back</a>
+        </header>
+
+        <div class="card">
+            <h3>All Users</h3>
+            <div id="usersList"></div>
+        </div>
+    </div>
+
+    <script>
+        async function loadUsers() {
+            const res = await fetch('/api/users');
+            const users = await res.json();
+            document.getElementById('usersList').innerHTML = users.map(u => `
+                <div class="card" style="padding:10px;margin:5px 0; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <strong>${u.name}</strong> (@${u.username})<br>
+                        <small style="color: #666;">${u.role}</small>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button onclick="resetPassword(${u.id})" class="btn-secondary" style="padding: 6px 12px; font-size: 12px;">Reset PW</button>
+                        <button onclick="deleteUser(${u.id}, '${u.name}')" class="btn-secondary" style="padding: 6px 12px; font-size: 12px; background: #dc3545; color: white;">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function resetPassword(userId) {
+            const newTempPassword = prompt('Enter new temporary password:');
+            if (!newTempPassword) return;
+            
+            const res = await fetch('/api/users/reset-password', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({userId, newTempPassword})
+            });
+            
+            if (res.ok) {
+                alert(`Password reset! New temp password: ${newTempPassword}`);
+                loadUsers();
+            } else {
+                alert('Error resetting password');
+            }
+        }
+
+        async function deleteUser(userId, userName) {
+            if (!confirm(`Delete user "${userName}"? This cannot be undone.`)) return;
+            
+            const res = await fetch(`/api/users/${userId}`, { method: 'DELETE' });
+            
+            if (res.ok) {
+                alert('User deleted!');
+                loadUsers();
+            } else {
+                alert('Error deleting user');
+            }
+        }
+
+        (async () => {
+            const res = await fetch('/api/session');
+            const data = await res.json();
+            if (!data.role || data.role !== 'admin') location.href = '/';
+            loadUsers();
+        })();
+    </script>
+</body>
+</html>

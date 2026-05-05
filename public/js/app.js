@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else {
                         // Redirect based on role
                         if (data.role === 'admin') window.location.href = '/admin.html';
-                        else if (data.role === 'faculty') window.location.href = '/faculty.html';
+                        else if (data.role === 'teacher') window.location.href = '/faculty.html';
                         else if (data.role === 'student') window.location.href = '/student.html';
                     }
                 } else {
@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (res.ok) {
                     // Redirect based on role
                     if (data.role === 'admin') window.location.href = '/admin.html';
-                    else if (data.role === 'faculty') window.location.href = '/faculty.html';
+                    else if (data.role === 'teacher') window.location.href = '/faculty.html';
                     else if (data.role === 'student') window.location.href = '/student.html';
                 } else {
                     cpError.textContent = data.error;

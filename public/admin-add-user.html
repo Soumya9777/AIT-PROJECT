@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add User | Admin Portal</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Add User</h1>
+            <a href="admin.html" class="btn-secondary">Back</a>
+        </header>
+
+        <div class="card">
+            <form id="addUserForm">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="newUsername" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="newPassword" required>
+                </div>
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="newName" required>
+                </div>
+                <div class="form-group">
+                    <label>Role</label>
+                    <select id="newRole">
+                        <option value="student">Student</option>
+                        <option value="teacher">Teacher</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary">Add User</button>
+                <div id="userMsg" class="hidden"></div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('addUserForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const res = await fetch('/api/users', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    username: newUsername.value,
+                    password: newPassword.value,
+                    name: newName.value,
+                    role: newRole.value
+                })
+            });
+            
+            const msgEl = document.getElementById('userMsg');
+            if (res.ok) {
+                msgEl.textContent = 'User added! Temp password: ' + newPassword.value;
+                msgEl.className = 'text-success';
+                e.target.reset();
+            } else {
+                msgEl.textContent = 'Error adding user';
+                msgEl.className = 'text-danger';
+            }
+            msgEl.classList.remove('hidden');
+        });
+
+        (async () => {
+            const res = await fetch('/api/session');
+            const data = await res.json();
+            if (!data.role || data.role !== 'admin') location.href = '/';
+        })();
+    </script>
+</body>
+</html>

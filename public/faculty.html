@@ -3,84 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Faculty Desk | Dashboard</title>
+    <title>Teacher Portal | Smart Attendance</title>
     <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="top-header">
-        <div class="top-header-left">
-            <div class="photo-placeholder">FACULTY<br>PHOTO</div>
-            <div class="user-details">
-                <p>Welcome <strong id="userNameDisplay">Faculty</strong></p>
-                <p>Logged In as <strong>Faculty</strong></p>
-            </div>
-        </div>
-        <div class="top-header-center">
-            <h1 class="site-title">Student Desk - Faculty</h1>
-        </div>
-        <div class="top-header-right">
-            <button id="logoutBtn" class="btn-secondary">Logout</button>
-        </div>
-    </div>
-    
-    <div class="secondary-nav">
-        <span class="red-text">Faculty Control Panel</span>
-    </div>
+    <div class="container">
+        <header class="header">
+            <h1>Teacher Portal</h1>
+            <button onclick="logout()" class="btn-secondary">Logout</button>
+        </header>
 
-    <div class="main-container">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <button class="sidebar-btn" onclick="showSection('startSessionSection')">Start Attendance</button>
-            <button class="sidebar-btn" onclick="showSection('reportsSection')">View Reports</button>
-        </div>
-
-        <!-- Content Area -->
-        <div class="content-area">
-            
-            <!-- Start Session Section -->
-            <div id="startSessionSection">
-                <div class="data-table" style="background-color: #5b9bd5; color: white; text-align: center; font-weight: bold; padding: 10px; border-radius: 4px 4px 0 0;">Live Attendance Session</div>
-                <div style="border: 1px solid #5b9bd5; padding: 20px; background-color: #dceaf6; margin-bottom: 20px;">
-                    <p style="margin-bottom: 15px; color: #1f4e79; font-weight: bold;">Start an AI camera session to automatically mark students.</p>
-                    <form id="startSessionForm" style="max-width: 400px;">
-                        <div class="form-group">
-                            <label>Subject Name</label>
-                            <input type="text" id="subject" placeholder="Enter Subject Name" required>
-                        </div>
-                        <button type="submit" class="btn-primary" style="width: auto;">Start Camera Kiosk</button>
-                    </form>
+        <!-- Create Session Form -->
+        <div class="card">
+            <h3>Create Attendance Session</h3>
+            <form id="sessionForm">
+                <div class="form-group">
+                    <label>Section</label>
+                    <input type="text" id="sectionName" required>
                 </div>
-            </div>
+                <div class="form-group">
+                    <label>Subject</label>
+                    <select id="subjectSelect"></select>
+                </div>
+                <div class="form-group">
+                    <label>Topic</label>
+                    <input type="text" id="topic" required>
+                </div>
+                <div class="form-group">
+                    <label>Start Time</label>
+                    <input type="time" id="startTime" required>
+                </div>
+                <div class="form-group">
+                    <label>End Time</label>
+                    <input type="time" id="endTime" required>
+                </div>
+                <button type="submit" class="btn-primary">Start Session</button>
+            </form>
+            <div id="sessionMsg" class="hidden"></div>
+        </div>
 
-            <!-- Reports Section -->
-            <div id="reportsSection" class="hidden">
-                <div class="data-table" style="background-color: #5b9bd5; color: white; text-align: center; font-weight: bold; padding: 10px; border-radius: 4px 4px 0 0;">Attendance Reports</div>
-                <table class="data-table" id="reportsTable">
-                    <thead>
-                        <tr>
-                            <th class="section-header">ID</th>
-                            <th class="section-header">Student Name</th>
-                            <th class="section-header">Subject</th>
-                            <th class="section-header">Time</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Data will be populated here -->
-                    </tbody>
-                </table>
-            </div>
+        <!-- Active Session QR -->
+        <div id="qrSection" class="card hidden" style="text-align: center; margin-top: 20px;">
+            <h3>Active Session QR Code</h3>
+            <p>QR refreshes every 5 seconds</p>
+            <img id="qrImage" style="margin: 20px auto; display: block;">
+            <div id="sessionInfo"></div>
+            <button onclick="stopSession()" class="btn-secondary">Stop Session</button>
+        </div>
 
+        <!-- Active Sessions List -->
+        <div class="card" style="margin-top: 20px;">
+            <h3>Active Sessions</h3>
+            <div id="activeSessions"></div>
         </div>
     </div>
 
-    <script src="js/app.js"></script>
     <script src="js/faculty.js"></script>
-    <script>
-        function showSection(sectionId) {
-            document.getElementById('startSessionSection').classList.add('hidden');
-            document.getElementById('reportsSection').classList.add('hidden');
-            document.getElementById(sectionId).classList.remove('hidden');
-        }
-    </script>
 </body>
 </html>

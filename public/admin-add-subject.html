@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Subject | Admin Portal</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Add Subject</h1>
+            <a href="admin.html" class="btn-secondary">Back</a>
+        </header>
+
+        <div class="card">
+            <form id="addSubjectForm">
+                <div class="form-group">
+                    <label>Subject Name</label>
+                    <input type="text" id="subjectName" required>
+                </div>
+                <button type="submit" class="btn-primary">Add Subject</button>
+                <div id="subjectMsg" class="hidden"></div>
+            </form>
+        </div>
+
+        <div class="card" style="margin-top: 20px;">
+            <h3>Available Subjects</h3>
+            <div id="subjectsList"></div>
+        </div>
+    </div>
+
+    <script>
+        async function loadSubjects() {
+            const res = await fetch('/api/subjects');
+            const subjects = await res.json();
+            document.getElementById('subjectsList').innerHTML = 
+                subjects.map(s => `<div class="card" style="padding:10px;margin:5px 0">${s.name}</div>`).join('');
+        }
+
+        document.getElementById('addSubjectForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const res = await fetch('/api/subjects', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({name: subjectName.value})
+            });
+            
+            const msgEl = document.getElementById('subjectMsg');
+            if (res.ok) {
+                msgEl.textContent = 'Subject added!';
+                msgEl.className = 'text-success';
+                e.target.reset();
+                loadSubjects();
+            } else {
+                msgEl.textContent = 'Error adding subject';
+                msgEl.className = 'text-danger';
+            }
+            msgEl.classList.remove('hidden');
+        });
+
+        (async () => {
+            const res = await fetch('/api/session');
+            const data = await res.json();
+            if (!data.role || data.role !== 'admin') location.href = '/';
+            loadSubjects();
+        })();
+    </script>
+</body>
+</html>
