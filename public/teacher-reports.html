@@ -166,27 +166,19 @@
         async function loadAttendanceDetails(sessionId, date, topic, subject) {
             selectedDate = date;
             selectedTopic = topic;
-
+            
             document.getElementById('detailTitle').textContent = `${selectedSection} - ${date} - ${topic}`;
             
-            // Get all students in this section (we need to know total students)
-            // For simplicity, show all students and mark who attended
-            const sessionRes = await fetch(`/api/attendance/sessions/active`, { credentials: 'same-origin' });
-            const sessions = await sessionRes.json();
-            const currentSession = sessions.find(s => s.id == sessionId);
-            
-            // Get attended students for this session
-            const attendedRes = await fetch('/api/attendance/reports', { credentials: 'same-origin' });
-            const attendedData = await attendedRes.json();
-            const sessionRecords = attendedData.filter(r => r.session_id == sessionId);
-            const attendedStudentIds = sessionRecords.map(r => r.student_id);
+            // Get attended students for this session FROM allRecords (don't re-fetch)
+            const sessionRecords = allRecords.filter(r => r.session_id == sessionId);
             const attendedStudentNames = sessionRecords.map(r => r.student_name);
 
-            // Get ALL students (for absent calculation)
-            // In real app, you'd filter by section. For now, show all students
+            // Get students in the SAME section (for absent calculation)
             const usersRes = await fetch('/api/users', { credentials: 'same-origin' });
             const allUsers = await usersRes.json();
-            const allStudentNames = allUsers.filter(u => u.role === 'student').map(u => u.name);
+            const sectionStudentNames = allUsers
+                .filter(u => u.role === 'student' && u.section === selectedSection)
+                .map(u => u.name);
 
             // Present students
             const presentContainer = document.getElementById('presentList');
@@ -201,8 +193,8 @@
 
             document.getElementById('presentCount').textContent = attendedStudentNames.length;
 
-            // Absent students (all students minus attended)
-            const absentNames = allStudentNames.filter(name => !attendedStudentNames.includes(name));
+            // Absent students (section students minus attended)
+            const absentNames = sectionStudentNames.filter(name => !attendedStudentNames.includes(name));
             const absentContainer = document.getElementById('absentList');
             
             if (absentNames.length === 0) {
@@ -221,6 +213,12 @@
                     </div>
                 `).join('');
             }
+
+            document.getElementById('absentCount').textContent = absentNames.length;
+
+            document.getElementById('datesSection').classList.add('hidden');
+            document.getElementById('attendanceDetails').classList.remove('hidden');
+        }
 
             document.getElementById('absentCount').textContent = absentNames.length;
 

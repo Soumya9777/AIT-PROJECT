@@ -144,16 +144,16 @@ app.get('/api/session', (req, res) => {
 
 // ============ USER MANAGEMENT API ============
 
-app.post('/api/users', requireAuth, requireRole('admin'), (req, res) => {
-    const { username, password, name, role } = req.body;
-    const hash = bcrypt.hashSync(password, 10);
-    db.run("INSERT INTO users (username, password, name, role) VALUES (?, ?, ?, ?)",
-        [username, hash, name, role],
-        function(err) {
-            if (err) return res.status(400).json({ error: 'Username may already exist' });
-            res.json({ id: this.lastID, message: 'User created' });
-        });
-});
+    app.post('/api/users', requireAuth, requireRole('admin'), (req, res) => {
+        const { username, password, name, role, section } = req.body;
+        const hash = bcrypt.hashSync(password, 10);
+        db.run("INSERT INTO users (username, password, name, role, section) VALUES (?, ?, ?, ?, ?)",
+            [username, hash, name, role, section || null],
+            function(err) {
+                if (err) return res.status(400).json({ error: 'Username may already exist' });
+                res.json({ id: this.lastID, message: 'User created' });
+            });
+    });
 
 app.get('/api/users', requireAuth, (req, res) => {
     db.all("SELECT id, username, name, role FROM users", (err, rows) => {
@@ -412,13 +412,56 @@ app.get('/api/attendance/percentage', requireAuth, (req, res) => {
         });
 });
 
-app.get('/api/attendance/reports', requireAuth, (req, res) => {
-    let query = `
-        SELECT r.id, s.section_name, s.topic, s.start_time, s.end_time, u.name as student_name, r.timestamp
-        FROM attendance_records r
-        JOIN attendance_sessions s ON r.session_id = s.id
-        JOIN users u ON r.student_id = u.id
-    `;
+    app.get('/api/attendance/reports', requireAuth, (req, res) => {
+        let query = `
+            SELECT r.id, s.id as session_id, s.section_name, s.topic, s.subject, s.start_time, s.end_time, u.section, u.name as student_name, r.timestamp
+            FROM attendance_records r
+            JOIN attendance_sessions s ON r.session_id = s.id
+            JOIN users u ON r.student_id = u.id
+        `;
+        
+        // Add filters
+        if (req.session.role === 'student') {
+            query += ` WHERE r.student_id = ?`;
+            db.all(query, [req.session.userId], (err, rows) => {
+                if (err) return res.status(500).json({ error: err.message });
+                res.json(rows);
+            });
+        } else if (req.session.role === 'teacher') {
+            query += ` WHERE s.faculty_id = ?`;
+            db.all(query, [req.session.userId], (err, rows) => {
+                if (err) return res.status(500).json({ error: err.message });
+                res.json(rows);
+            });
+        } else {
+            db.all(query, [], (err, rows) => {
+                if (err) return res.status(500).json({ error: err.message });
+                res.json(rows);
+            });
+        }
+        return;
+    });
+        
+        // Add filters
+        if (req.session.role === 'student') {
+            query += ` WHERE r.student_id = ?`;
+            db.all(query, [req.session.userId], (err, rows) => {
+                if (err) return res.status(500).json({ error: err.message });
+                res.json(rows);
+            });
+        } else if (req.session.role === 'teacher') {
+            query += ` WHERE s.faculty_id = ?`;
+            db.all(query, [req.session.userId], (err, rows) => {
+                if (err) return res.status(500).json({ error: err.message });
+                res.json(rows);
+            });
+        } else {
+            db.all(query, [], (err, rows) => {
+                if (err) return res.status(500).json({ error: err.message });
+                res.json(rows);
+            });
+        }
+    });
     let params = [];
     
     if (req.session.role === 'student') {

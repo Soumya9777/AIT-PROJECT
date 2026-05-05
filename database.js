@@ -27,8 +27,12 @@ function initDb() {
             password TEXT,
             name TEXT,
             role TEXT,
+            section TEXT,
             is_temp_password INTEGER DEFAULT 1
-        )`);
+        )`, () => {
+            // Add section column if not exists (for existing databases)
+            db.run(`ALTER TABLE users ADD COLUMN section TEXT`, () => {});
+        });
 
         // Face Descriptors Table
         db.run(`CREATE TABLE IF NOT EXISTS face_descriptors (
