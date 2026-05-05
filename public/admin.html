@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Portal | Smart Attendance</title>
     <link rel="stylesheet" href="css/styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="container">
@@ -17,49 +17,48 @@
             <button onclick="logout()" class="btn-secondary">Logout</button>
         </header>
 
-        <div style="display: flex; flex-direction: column; gap: 16px; max-width: 600px;">
-            <a href="admin-add-user.html" class="card" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 20px; padding: 24px;">
-                <div style="font-size: 40px; width: 60px; text-align: center; flex-shrink: 0;">👤</div>
-                <div>
-                    <h3 style="margin: 0 0 4px 0; font-size: 18px;">Add User</h3>
-                    <p style="color: var(--secondary); font-size: 14px; margin: 0;">Create new student or teacher account</p>
+        <div style="max-width: 700px;">
+            <div class="option-card" onclick="location.href='admin-add-user.html'">
+                <div class="option-icon">👤</div>
+                <div class="option-content">
+                    <h3>Add User</h3>
+                    <p>Create new student or teacher accounts with temporary passwords</p>
                 </div>
-            </a>
+            </div>
 
-            <a href="admin-add-subject.html" class="card" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 20px; padding: 24px;">
-                <div style="font-size: 40px; width: 60px; text-align: center; flex-shrink: 0;">📚</div>
-                <div>
-                    <h3 style="margin: 0 0 4px 0; font-size: 18px;">Add Subject</h3>
-                    <p style="color: var(--secondary); font-size: 14px; margin: 0;">Add new subjects to the system</p>
+            <div class="option-card" onclick="location.href='admin-add-subject.html'">
+                <div class="option-icon">📚</div>
+                <div class="option-content">
+                    <h3>Add Subject</h3>
+                    <p>Add new subjects to the system for attendance tracking</p>
                 </div>
-            </a>
+            </div>
 
-            <a href="admin-add-face.html" class="card" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 20px; padding: 24px;">
-                <div style="font-size: 40px; width: 60px; text-align: center; flex-shrink: 0;">📷</div>
-                <div>
-                    <h3 style="margin: 0 0 4px 0; font-size: 18px;">Add Face</h3>
-                    <p style="color: var(--secondary); font-size: 14px; margin: 0;">Register face data for users</p>
+            <div class="option-card" onclick="location.href='admin-add-face.html'">
+                <div class="option-icon">📷</div>
+                <div class="option-content">
+                    <h3>Add Face</h3>
+                    <p>Register face data for users to enable secure attendance</p>
                 </div>
-            </a>
+            </div>
 
-            <a href="admin-manage-users.html" class="card" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 20px; padding: 24px;">
-                <div style="font-size: 40px; width: 60px; text-align: center; flex-shrink: 0;">⚙️</div>
-                <div>
-                    <h3 style="margin: 0 0 4px 0; font-size: 18px;">Manage Users</h3>
-                    <p style="color: var(--secondary); font-size: 14px; margin: 0;">Reset passwords and delete users</p>
+            <div class="option-card" onclick="location.href='admin-manage-users.html'">
+                <div class="option-icon">⚙️</div>
+                <div class="option-content">
+                    <h3>Manage Users</h3>
+                    <p>Reset passwords, delete users, and manage accounts</p>
                 </div>
-            </a>
+            </div>
         </div>
     </div>
 
     <script>
         function logout() {
-            fetch('/api/logout').then(() => location.href = '/');
+            fetch('/api/logout', { credentials: 'same-origin' }).then(() => location.href = '/');
         }
 
-        // Check auth
         (async () => {
-            const res = await fetch('/api/session');
+            const res = await fetch('/api/session', { credentials: 'same-origin' });
             const data = await res.json();
             if (!data.role || data.role !== 'admin') location.href = '/';
         })();

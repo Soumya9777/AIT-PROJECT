@@ -49,9 +49,9 @@
                 <h3>Create Attendance Session</h3>
             </div>
             <form id="sessionForm">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
                     <div class="form-group">
-                        <label>Section</label>
+                        <label>Section Name</label>
                         <input type="text" id="sectionName" placeholder="e.g., CSE-A" required>
                     </div>
                     <div class="form-group">
@@ -73,7 +73,7 @@
                         <input type="time" id="endTime" required>
                     </div>
                 </div>
-                <button type="submit" class="btn-primary">🚀 Start Session</button>
+                <button type="submit" class="btn-primary" style="width: 100%;">🚀 Start Session & Generate QR</button>
             </form>
             <div id="sessionMsg" class="hidden"></div>
         </div>
@@ -85,11 +85,11 @@
                 <h3>Active Session QR Code</h3>
             </div>
             <div class="qr-container">
-                <p style="color: var(--gray-500); margin-bottom: 16px; font-size: 14px;">
+                <p style="color: var(--gray-500); margin-bottom: 16px; font-size: 14px; font-weight: 600;">
                     ⚡ QR refreshes automatically every 5 seconds
                 </p>
-                <img id="qrImage" style="max-width: 240px;">
-                <div id="sessionInfo" style="margin-top: 20px;"></div>
+                <img id="qrImage" style="max-width: 280px;">
+                <div id="sessionInfo" style="margin-top: 24px;"></div>
             </div>
             <button onclick="stopSession()" class="btn-danger" style="margin-top: 16px; width: 100%;">
                 ⏹ Stop Session

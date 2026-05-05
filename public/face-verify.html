@@ -6,27 +6,34 @@
     <title>Face Verification | Smart Attendance</title>
     <link rel="stylesheet" href="css/styles.css">
     <script src="js/face-api.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="login-container">
-        <div class="card">
-            <div style="text-align: center; margin-bottom: 24px;">
-                <img src="images/college-logo.jpg" alt="College Logo" style="height: 80px; margin-bottom: 16px;">
-                <h2>Face Verification Required</h2>
-                <p style="color: var(--secondary);">Please verify your face to continue</p>
+        <div class="login-card">
+            <div class="login-header">
+                <img src="images/college-logo.jpg" alt="College Logo" style="height: 100px; margin-bottom: 20px;">
+                <h2 style="color: white; font-size: 32px; font-weight: 900; margin-bottom: 12px;">Face Verification</h2>
+                <p style="opacity: 0.95; font-size: 18px;">Please verify your face to continue</p>
             </div>
 
-            <div style="text-align: center;">
-                <video id="faceVideo" width="320" height="240" autoplay style="max-width: 100%; height: auto; border-radius: var(--radius);"></video>
+            <div class="login-body" style="text-align: center;">
+                <video id="faceVideo" width="320" height="240" autoplay style="max-width: 100%; height: auto; border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); margin-bottom: 20px;"></video>
                 <canvas id="faceCanvas" style="display: none;"></canvas>
                 
-                <div id="faceStatus" style="margin: 16px 0; padding: 12px; border-radius: var(--radius-sm); font-weight: 500;">Position your face in front of the camera...</div>
+                <div id="faceStatus" style="margin: 20px 0; padding: 16px; border-radius: var(--radius-xs); font-weight: 600; font-size: 15px;">
+                    Position your face in front of the camera...
+                </div>
                 
-                <button onclick="verifyFace()" id="verifyBtn" class="btn-primary" style="width: 100%; padding: 16px; font-size: 16px;">Verify Face</button>
+                <button onclick="verifyFace()" id="verifyBtn" class="btn-primary" style="width: 100%; padding: 18px; font-size: 18px;">
+                    📷 Verify Face
+                </button>
                 
-                <div id="verifyMsg" style="margin-top: 16px;"></div>
+                <div id="verifyMsg" style="margin-top: 20px;"></div>
                 
-                <button onclick="logout()" style="margin-top: 12px; background: none; border: none; color: var(--secondary); cursor: pointer; font-size: 14px;">Cancel / Logout</button>
+                <button onclick="logout()" style="margin-top: 16px; background: none; border: none; color: var(--gray-500); cursor: pointer; font-size: 15px; font-weight: 600;">
+                    Cancel / Logout
+                </button>
             </div>
         </div>
     </div>
@@ -37,7 +44,6 @@
         let currentUser = null;
 
         (async () => {
-            // Check session
             const sessionRes = await fetch('/api/session', { credentials: 'same-origin' });
             currentUser = await sessionRes.json();
             
@@ -45,26 +51,17 @@
                 location.href = '/';
                 return;
             }
-            
-            // If already verified, redirect to student page
-            if (currentUser.faceVerified) {
-                location.href = 'student.html';
-                return;
-            }
 
-            // Load face-api models
             await Promise.all([
                 faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
                 faceapi.nets.faceRecognitionNet.loadFromUri('/models'),
                 faceapi.nets.faceLandmark68Net.loadFromUri('/models')
             ]);
 
-            // Start video
             const video = document.getElementById('faceVideo');
             const stream = await navigator.mediaDevices.getUserMedia({video: {}});
             video.srcObject = stream;
 
-            // Start continuous face detection
             startFaceDetection();
         })();
 
@@ -118,7 +115,6 @@
             faceStatus.style.color = '#1e40af';
 
             try {
-                // Get stored face descriptor
                 const res = await fetch('/api/faces', { credentials: 'same-origin' });
                 const faces = await res.json();
                 
@@ -129,14 +125,12 @@
                     return;
                 }
 
-                // Compare faces
                 const storedDesc = userFace.descriptor;
                 const distance = faceDistance(storedDesc, faceDescriptor);
                 
                 if (distance < 0.6) {
                     verifyMsg.innerHTML = '<div class="text-success">✓ Face verified! Redirecting...</div>';
                     
-                    // Set face verified flag in session
                     await fetch('/api/face-verify', {
                         method: 'POST',
                         credentials: 'same-origin'

@@ -6,6 +6,7 @@
     <title>Scan Attendance | Smart Attendance</title>
     <link rel="stylesheet" href="css/styles.css">
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="container">
@@ -18,16 +19,24 @@
         </header>
 
         <div class="card" style="text-align: center;">
-            <h3>Step 1: Scan QR Code</h3>
-            <p style="color: var(--secondary); margin-bottom: 20px;">Position the QR code within the frame</p>
-            <div id="qr-reader" style="width: 100%; max-width: 300px; margin: 0 auto;"></div>
-            <div id="qrResult" class="hidden" style="margin-top: 16px; padding: 12px; background: #d1fae5; border-radius: var(--radius-sm);"></div>
+            <div style="margin-bottom: 24px;">
+                <div style="width: 80px; height: 80px; margin: 0 auto 16px; background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);">
+                    📱
+                </div>
+                <h3 style="font-size: 24px; margin-bottom: 8px;">Scan QR Code</h3>
+                <p style="color: var(--gray-500);">Position the QR code within the frame below</p>
+            </div>
+            
+            <div id="qr-reader" style="width: 100%; max-width: 320px; margin: 0 auto;"></div>
+            
+            <div id="qrResult" class="hidden" style="margin-top: 20px; padding: 16px; background: #d1fae5; border-radius: var(--radius-sm); font-weight: 600; color: #065f46;"></div>
         </div>
 
-        <div id="markAttendance" class="card hidden" style="text-align: center; margin-top: 20px;">
-            <h3 style="color: var(--success);">✓ QR Code Scanned!</h3>
-            <p>Your attendance is being marked...</p>
-            <div id="attendanceMsg" style="margin-top: 16px;"></div>
+        <div id="markAttendance" class="card hidden" style="text-align: center; margin-top: 24px;">
+            <div style="font-size: 64px; margin-bottom: 16px;">⏳</div>
+            <h3 style="margin-bottom: 8px;">Marking Attendance...</h3>
+            <p style="color: var(--gray-500);">Please wait while we process your attendance</p>
+            <div id="attendanceMsg" style="margin-top: 20px;"></div>
         </div>
     </div>
 
@@ -35,36 +44,30 @@
         let scannedSessionId = null;
         let scannedToken = null;
 
-        // Check auth
         (async () => {
             const res = await fetch('/api/session', { credentials: 'same-origin' });
             const data = await res.json();
             if (!data.id || data.role !== 'student') location.href = '/';
             
-            // Check face verification
             if (!data.faceVerified) {
                 location.href = '/face-verify.html';
                 return;
             }
         })();
 
-        // Start QR scanner
         const html5Qrcode = new Html5Qrcode("qr-reader");
         html5Qrcode.start(
             { facingMode: "environment" },
-            { fps: 10, qrbox: 250 },
+            { fps: 10, qrbox: 280 },
             (decodedText) => {
                 const data = JSON.parse(decodedText);
                 scannedSessionId = data.sessionId;
                 scannedToken = data.token;
                 
-                document.getElementById('qrResult').innerHTML = `✓ QR Scanned! Session ID: ${scannedSessionId}`;
+                document.getElementById('qrResult').innerHTML = `✓ QR Scanned! Session: ${scannedSessionId}`;
                 document.getElementById('qrResult').classList.remove('hidden');
                 
-                // Stop scanner
                 html5Qrcode.stop();
-                
-                // Mark attendance
                 markAttendance();
             },
             (error) => {}
@@ -89,20 +92,22 @@
             
             if (res.ok) {
                 msgEl.innerHTML = `
-                    <div style="padding: 16px; background: #d1fae5; border-radius: var(--radius-sm);">
-                        <h3 style="color: var(--success);">✓ Attendance Marked!</h3>
-                        <p>${data.message}</p>
-                        <a href="student.html" class="btn-primary" style="display: inline-block; margin-top: 12px; text-decoration: none;">
+                    <div style="padding: 24px; background: #d1fae5; border-radius: var(--radius-sm);">
+                        <div style="font-size: 64px; margin-bottom: 16px;">✓</div>
+                        <h3 style="color: #065f46; margin-bottom: 8px;">Attendance Marked!</h3>
+                        <p style="color: #047857;">${data.message}</p>
+                        <a href="student.html" class="btn-primary" style="display: inline-block; margin-top: 20px; text-decoration: none;">
                             Back to Dashboard
                         </a>
                     </div>
                 `;
             } else {
                 msgEl.innerHTML = `
-                    <div style="padding: 16px; background: #fee2e2; border-radius: var(--radius-sm);">
-                        <h3 style="color: var(--danger);">✗ Failed</h3>
-                        <p>${data.error}</p>
-                        <button onclick="location.reload()" class="btn-secondary" style="margin-top: 12px;">
+                    <div style="padding: 24px; background: #fee2e2; border-radius: var(--radius-sm);">
+                        <div style="font-size: 64px; margin-bottom: 16px;">✗</div>
+                        <h3 style="color: #991b1b; margin-bottom: 8px;">Failed</h3>
+                        <p style="color: #dc2626;">${data.error}</p>
+                        <button onclick="location.reload()" class="btn-secondary" style="margin-top: 16px;">
                             Try Again
                         </button>
                     </div>
