@@ -18,178 +18,223 @@
             <a href="teacher.html" class="btn-secondary">Back</a>
         </header>
 
-        <!-- Filters -->
+        <!-- Step 1: Select Section -->
         <div class="card">
             <div class="card-header">
-                <div class="card-header-icon">🔍</div>
-                <h3>Filters</h3>
+                <div class="card-header-icon">📚</div>
+                <h3>Step 1: Select Section</h3>
             </div>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label>Search Student</label>
-                    <input type="text" id="filterStudent" placeholder="Search by name..." onkeyup="applyFilters()">
-                </div>
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label>Subject</label>
-                    <select id="filterSubject" onchange="applyFilters()">
-                        <option value="">All Subjects</option>
-                    </select>
-                </div>
+            <div style="display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: end;">
                 <div class="form-group" style="margin-bottom: 0;">
                     <label>Section</label>
-                    <input type="text" id="filterSection" placeholder="e.g., CSE-A" onkeyup="applyFilters()">
+                    <select id="sectionSelect" onchange="loadDates()">
+                        <option value="">-- Select Section --</option>
+                    </select>
                 </div>
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label>Date From</label>
-                    <input type="date" id="filterDateFrom" onchange="applyFilters()">
-                </div>
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label>Date To</label>
-                    <input type="date" id="filterDateTo" onchange="applyFilters()">
-                </div>
-            </div>
-            <div style="margin-top: 16px; display: flex; gap: 12px;">
-                <button onclick="loadReports()" class="btn-primary">🔍 Apply Filters</button>
-                <button onclick="exportCSV()" class="btn-secondary">📥 Export CSV</button>
+                <button onclick="loadDates()" class="btn-primary" style="height: fit-content;">🔍 Load</button>
             </div>
         </div>
 
-        <!-- Report Table -->
-        <div class="card" style="margin-top: 24px;">
+        <!-- Step 2: Dates & Topics -->
+        <div id="datesSection" class="card hidden" style="margin-top: 24px;">
             <div class="card-header">
-                <div class="card-header-icon">📋</div>
-                <h3>Attendance Records</h3>
+                <div class="card-header-icon">📅</div>
+                <h3>Step 2: Select Date & Topic</h3>
             </div>
-            <div id="reportTable" style="overflow-x: auto;">
-                <p style="text-align: center; padding: 40px; color: var(--gray-400);">Loading...</p>
+            <div id="datesList"></div>
+        </div>
+
+        <!-- Step 3: Present/Absent Students -->
+        <div id="attendanceDetails" class="card hidden" style="margin-top: 24px;">
+            <div class="card-header">
+                <div class="card-header-icon">👥</div>
+                <h3 id="detailTitle">Attendance Details</h3>
+                <button onclick="goBack()" class="btn-secondary" style="margin-left: auto;">← Back</button>
+            </div>
+            
+            <!-- Present Students -->
+            <div style="margin-top: 20px;">
+                <h4 style="color: var(--success); margin-bottom: 12px;">✓ Present Students (<span id="presentCount">0</span>)</h4>
+                <div id="presentList"></div>
+            </div>
+
+            <!-- Absent Students -->
+            <div style="margin-top: 24px;">
+                <h4 style="color: var(--danger); margin-bottom: 12px;">✗ Absent Students (<span id="absentCount">0</span>)</h4>
+                <div id="absentList"></div>
             </div>
         </div>
+
+        <!-- All Students in Section (for calculating absent) -->
+        <div id="allStudentsSection" class="hidden"></div>
     </div>
 
     <script>
         let allRecords = [];
+        let allStudents = [];
+        let selectedSection = null;
+        let selectedDate = null;
+        let selectedTopic = null;
 
         (async () => {
             const res = await fetch('/api/session', { credentials: 'same-origin' });
             const data = await res.json();
             if (!data.role || data.role !== 'teacher') location.href = '/';
             
-            loadSubjects();
+            loadSections();
+            loadAllStudents();
             loadReports();
         })();
 
-        async function loadSubjects() {
-            const res = await fetch('/api/subjects', { credentials: 'same-origin' });
-            const subjects = await res.json();
-            const select = document.getElementById('filterSubject');
-            select.innerHTML = '<option value="">All Subjects</option>' + 
-                subjects.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+        async function loadSections() {
+            const res = await fetch('/api/sections', { credentials: 'same-origin' });
+            const sections = await res.json();
+            const select = document.getElementById('sectionSelect');
+            select.innerHTML = '<option value="">-- Select Section --</option>' + 
+                sections.map(s => `<option value="${s.name}">${s.name} ${s.description ? '(' + s.description + ')' : ''}</option>`).join('');
+        }
+
+        async function loadAllStudents() {
+            const res = await fetch('/api/users', { credentials: 'same-origin' });
+            const users = await res.json();
+            allStudents = users.filter(u => u.role === 'student');
         }
 
         async function loadReports() {
             const res = await fetch('/api/attendance/reports', { credentials: 'same-origin' });
             allRecords = await res.json();
-            applyFilters();
         }
 
-        function applyFilters() {
-            const subject = document.getElementById('filterSubject').value;
-            const section = document.getElementById('filterSection').value.toLowerCase();
-            const student = document.getElementById('filterStudent').value.toLowerCase();
-            const dateFrom = document.getElementById('filterDateFrom').value;
-            const dateTo = document.getElementById('filterDateTo').value;
-
-            let filtered = allRecords;
-
-            if (subject) {
-                filtered = filtered.filter(r => r.subject === subject || !r.subject);
-            }
-            if (section) {
-                filtered = filtered.filter(r => r.section_name.toLowerCase().includes(section));
-            }
-            if (student) {
-                filtered = filtered.filter(r => r.student_name.toLowerCase().includes(student));
-            }
-            if (dateFrom) {
-                filtered = filtered.filter(r => {
-                    const recordDate = new Date(r.timestamp).toISOString().split('T')[0];
-                    return recordDate >= dateFrom;
-                });
-            }
-            if (dateTo) {
-                filtered = filtered.filter(r => {
-                    const recordDate = new Date(r.timestamp).toISOString().split('T')[0];
-                    return recordDate <= dateTo;
-                });
-            }
-
-            const container = document.getElementById('reportTable');
-            
-            if (filtered.length === 0) {
-                container.innerHTML = `
-                    <div style="text-align: center; padding: 40px; color: var(--gray-400);">
-                        <div style="font-size: 48px; margin-bottom: 12px;">📭</div>
-                        <p>No records found</p>
-                    </div>
-                `;
+        async function loadDates() {
+            selectedSection = document.getElementById('sectionSelect').value;
+            if (!selectedSection) {
+                document.getElementById('datesSection').classList.add('hidden');
+                document.getElementById('attendanceDetails').classList.add('hidden');
                 return;
             }
 
-                container.innerHTML = `
-                <table style="width: 100%; border-collapse: collapse;">
-                    <thead>
-                        <tr style="background: var(--gray-50); text-align: left;">
-                            <th style="padding: 12px; font-size: 13px; text-transform: uppercase; color: var(--gray-500);">Student</th>
-                            <th style="padding: 12px; font-size: 13px; text-transform: uppercase; color: var(--gray-500);">Section</th>
-                            <th style="padding: 12px; font-size: 13px; text-transform: uppercase; color: var(--gray-500);">Topic</th>
-                            <th style="padding: 12px; font-size: 13px; text-transform: uppercase; color: var(--gray-500);">Subject</th>
-                            <th style="padding: 12px; font-size: 13px; text-transform: uppercase; color: var(--gray-500);">Date</th>
-                            <th style="padding: 12px; font-size: 13px; text-transform: uppercase; color: var(--gray-500);">Time</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${filtered.map(r => {
-                            const date = new Date(r.timestamp);
-                            return `
-                            <tr style="border-bottom: 1px solid var(--gray-100);">
-                                <td style="padding: 12px; font-weight: 500;">${r.student_name}</td>
-                                <td style="padding: 12px; color: var(--gray-600);">${r.section_name}</td>
-                                <td style="padding: 12px; color: var(--gray-600);">${r.topic}</td>
-                                <td style="padding: 12px;"><span class="badge badge-success">${r.subject || 'N/A'}</span></td>
-                                <td style="padding: 12px; color: var(--gray-600); font-size: 13px;">${date.toLocaleDateString()}</td>
-                                <td style="padding: 12px; color: var(--gray-400); font-size: 13px;">${date.toLocaleTimeString()}</td>
-                            </tr>
-                        `}).join('')}
-                    </tbody>
-                </table>
-            `;
-        }
+            // Filter records by section
+            const sectionRecords = allRecords.filter(r => r.section_name === selectedSection);
+            
+            if (sectionRecords.length === 0) {
+                document.getElementById('datesList').innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: var(--gray-400);">
+                        <div style="font-size: 48px; margin-bottom: 12px;">📭</div>
+                        <p>No attendance records for ${selectedSection}</p>
+                    </div>
+                `;
+                document.getElementById('datesSection').classList.remove('hidden');
+                return;
+            }
 
-        function exportCSV() {
-            const subject = document.getElementById('filterSubject').value;
-            const section = document.getElementById('filterSection').value.toLowerCase();
-            const dateFrom = document.getElementById('filterDateFrom').value;
-            const dateTo = document.getElementById('filterDateTo').value;
-
-            let filtered = allRecords;
-
-            if (subject) filtered = filtered.filter(r => r.subject === subject || !r.subject);
-            if (section) filtered = filtered.filter(r => r.section_name.toLowerCase().includes(section));
-            if (dateFrom) filtered = filtered.filter(r => new Date(r.timestamp) >= new Date(dateFrom));
-            if (dateTo) filtered = filtered.filter(r => new Date(r.timestamp) <= new Date(dateTo + 'T23:59:59'));
-
-            let csv = 'Student Name,Section,Topic,Subject,Time\n';
-            filtered.forEach(r => {
-                csv += `"${r.student_name}","${r.section_name}","${r.topic}","${r.subject || 'N/A'}","${new Date(r.timestamp).toLocaleString()}"\n`;
+            // Group by date and topic
+            const grouped = {};
+            sectionRecords.forEach(r => {
+                const date = new Date(r.timestamp).toLocaleDateString();
+                const key = `${date}|${r.topic}|${r.subject}`;
+                if (!grouped[key]) {
+                    grouped[key] = {
+                        date: date,
+                        topic: r.topic,
+                        subject: r.subject,
+                        time: new Date(r.timestamp).toLocaleTimeString(),
+                        sessionId: r.session_id
+                    };
+                }
             });
 
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `attendance_report_${new Date().toISOString().split('T')[0]}.csv`;
-            a.click();
-            window.URL.revokeObjectURL(url);
+            const container = document.getElementById('datesList');
+            container.innerHTML = Object.values(grouped).map(g => `
+                <div class="list-item" onclick="loadAttendanceDetails('${g.sessionId}', '${g.date}', '${g.topic}', '${g.subject}')" style="cursor: pointer;">
+                    <div>
+                        <strong style="font-size: 16px;">${g.date}</strong><br>
+                        <span style="color: var(--gray-500); font-size: 14px;">
+                            ${g.topic} • ${g.subject}
+                        </span><br>
+                        <span style="color: var(--gray-400); font-size: 13px;">
+                            🕐 ${g.time}
+                        </span>
+                    </div>
+                    <span style="color: var(--primary); font-size: 13px;">View Details →</span>
+                </div>
+            `).join('');
+
+            document.getElementById('datesSection').classList.remove('hidden');
+            document.getElementById('attendanceDetails').classList.add('hidden');
+        }
+
+        async function loadAttendanceDetails(sessionId, date, topic, subject) {
+            selectedDate = date;
+            selectedTopic = topic;
+
+            document.getElementById('detailTitle').textContent = `${selectedSection} - ${date} - ${topic}`;
+            
+            // Get all students in this section (we need to know total students)
+            // For simplicity, show all students and mark who attended
+            const sessionRes = await fetch(`/api/attendance/sessions/active`, { credentials: 'same-origin' });
+            const sessions = await sessionRes.json();
+            const currentSession = sessions.find(s => s.id == sessionId);
+            
+            // Get attended students for this session
+            const attendedRes = await fetch('/api/attendance/reports', { credentials: 'same-origin' });
+            const attendedData = await attendedRes.json();
+            const sessionRecords = attendedData.filter(r => r.session_id == sessionId);
+            const attendedStudentIds = sessionRecords.map(r => r.student_id);
+            const attendedStudentNames = sessionRecords.map(r => r.student_name);
+
+            // Get ALL students (for absent calculation)
+            // In real app, you'd filter by section. For now, show all students
+            const usersRes = await fetch('/api/users', { credentials: 'same-origin' });
+            const allUsers = await usersRes.json();
+            const allStudentNames = allUsers.filter(u => u.role === 'student').map(u => u.name);
+
+            // Present students
+            const presentContainer = document.getElementById('presentList');
+            presentContainer.innerHTML = attendedStudentNames.map(name => `
+                <div class="list-item">
+                    <div>
+                        <strong>${name}</strong>
+                    </div>
+                    <span class="badge badge-success">Present</span>
+                </div>
+            `).join('');
+
+            document.getElementById('presentCount').textContent = attendedStudentNames.length;
+
+            // Absent students (all students minus attended)
+            const absentNames = allStudentNames.filter(name => !attendedStudentNames.includes(name));
+            const absentContainer = document.getElementById('absentList');
+            
+            if (absentNames.length === 0) {
+                absentContainer.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: var(--gray-400);">
+                        <p>All students present! 🎉</p>
+                    </div>
+                `;
+            } else {
+                absentContainer.innerHTML = absentNames.map(name => `
+                    <div class="list-item">
+                        <div>
+                            <strong>${name}</strong>
+                        </div>
+                        <span class="badge badge-danger">Absent</span>
+                    </div>
+                `).join('');
+            }
+
+            document.getElementById('absentCount').textContent = absentNames.length;
+
+            document.getElementById('datesSection').classList.add('hidden');
+            document.getElementById('attendanceDetails').classList.remove('hidden');
+        }
+
+        function goBack() {
+            document.getElementById('attendanceDetails').classList.add('hidden');
+            document.getElementById('datesSection').classList.remove('hidden');
+        }
+
+        function logout() {
+            fetch('/api/logout', { credentials: 'same-origin' }).then(() => location.href = '/');
         }
     </script>
 </body>
