@@ -13,14 +13,14 @@ document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
     
     const data = await res.json();
     
-    if (res.ok) {
+     if (res.ok) {
         if (data.requiresPasswordChange) {
             document.getElementById('loginSection').classList.add('hidden');
             document.getElementById('changePasswordSection').classList.remove('hidden');
             document.getElementById('cpUsername').value = data.username;
             document.getElementById('cpTempPassword').value = password; // Store temp password
         } else {
-            window.location.href = data.role + '.html';
+            window.location.href = data.redirect || data.role + '.html';
         }
     } else {
         document.getElementById('loginError').textContent = data.error;
@@ -51,11 +51,11 @@ document.getElementById('changePasswordForm')?.addEventListener('submit', async 
         credentials: 'same-origin'
     });
     
-    const data = await res.json();
-    
-    if (res.ok) {
-        window.location.href = data.role + '.html';
-    } else {
+     const data = await res.json();
+     
+     if (res.ok) {
+         window.location.href = data.redirect || data.role + '.html';
+     } else {
         document.getElementById('cpError').textContent = data.error;
         document.getElementById('cpError').classList.remove('hidden');
     }
@@ -67,10 +67,10 @@ document.getElementById('changePasswordForm')?.addEventListener('submit', async 
         const res = await fetch('/api/session', {
             credentials: 'same-origin'
         });
-        const data = await res.json();
-        if (data.id) {
-            window.location.href = data.role + '.html';
-        }
+         const data = await res.json();
+         if (data.id) {
+             window.location.href = data.redirect || data.role + '.html';
+         }
     } catch (err) {
         console.error('Session check failed:', err);
     }

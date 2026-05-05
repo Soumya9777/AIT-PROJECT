@@ -74,7 +74,15 @@ app.post('/api/login', (req, res) => {
             req.session.userId = user.id;
             req.session.role = user.role;
             req.session.name = user.name;
-            res.json({ message: 'Login successful', role: user.role, name: user.name });
+            
+            // Map role to correct page
+            const roleToPage = {
+                'admin': 'admin.html',
+                'teacher': 'teacher.html',
+                'student': 'student.html'
+            };
+            
+            res.json({ message: 'Login successful', role: user.role, name: user.name, redirect: roleToPage[user.role] });
         } else {
             res.status(401).json({ error: 'Invalid credentials' });
         }
