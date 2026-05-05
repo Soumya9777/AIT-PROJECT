@@ -15,6 +15,10 @@
                 Admin Dashboard
             </h1>
             <div style="display: flex; gap: 12px; align-items: center;">
+                <div id="notificationBell" style="position: relative; cursor: pointer;" onclick="toggleNotifications()">
+                    🔔
+                    <span id="notifBadge" style="position: absolute; top: -8px; right: -8px; background: var(--danger); color: white; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; display: flex; align-items: center; justify-content: center;">0</span>
+                </div>
                 <a href="profile.html" class="btn-secondary" style="text-decoration: none;">👤 Profile</a>
                 <button onclick="logout()" class="btn-secondary">Logout</button>
             </div>
@@ -40,7 +44,7 @@
                 <div class="stat-icon">📊</div>
                 <div class="stat-content">
                     <h3 id="totalSessions">0</h3>
-                    <p>Active Sessions</p>
+                    <p>Total Sessions</p>
                 </div>
             </div>
             <div class="stat-card">
@@ -52,73 +56,51 @@
             </div>
         </div>
 
+        <!-- Recent Activity -->
+        <div class="card" style="margin-top: 24px;">
+            <div class="card-header">
+                <div class="card-header-icon">📋</div>
+                <h3>Recent Attendance Activity</h3>
+            </div>
+            <div id="recentActivity"></div>
+        </div>
+
         <!-- Quick Actions -->
         <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px;">
             <a href="admin-add-user.html" class="btn-primary" style="text-decoration: none;">➕ Add User</a>
             <a href="admin-add-subject.html" class="btn-primary" style="text-decoration: none;">📚 Add Subject</a>
             <a href="admin-bulk-upload.html" class="btn-primary" style="text-decoration: none;">📥 Bulk Upload</a>
-            <a href="admin-add-face.html" class="btn-secondary" style="text-decoration: none;">📷 Add Face</a>
-            <a href="admin-manage-users.html" class="btn-secondary" style="text-decoration: none;">⚙️ Manage Users</a>
+            <a href="teacher-reports.html" class="btn-secondary" style="text-decoration: none;">📊 View Reports</a>
         </div>
 
-        <!-- Management Options -->
-        <div style="max-width: 700px; margin-top: 32px;">
-            <div class="option-card" onclick="location.href='admin-add-user.html'">
-                <div class="option-icon">👤</div>
-                <div class="option-content">
-                    <h3>Add User</h3>
-                    <p>Create new student or teacher accounts with temporary passwords</p>
-                </div>
+        <!-- Notification Panel -->
+        <div id="notifPanel" style="display: none; position: fixed; top: 80px; right: 20px; width: 360px; max-height: 480px; overflow-y: auto; background: white; border-radius: var(--radius); box-shadow: var(--shadow-xl); border: 1px solid var(--gray-200); z-index: 1000;">
+            <div style="padding: 20px; border-bottom: 1px solid var(--gray-100);">
+                <h3 style="margin: 0; font-size: 18px;">Notifications</h3>
             </div>
-
-            <div class="option-card" onclick="location.href='admin-add-subject.html'">
-                <div class="option-icon">📚</div>
-                <div class="option-content">
-                    <h3>Add Subject</h3>
-                    <p>Add new subjects to the system for attendance tracking</p>
-                </div>
-            </div>
-
-            <div class="option-card" onclick="location.href='admin-bulk-upload.html'">
-                <div class="option-icon">📥</div>
-                <div class="option-content">
-                    <h3>Bulk Upload</h3>
-                    <p>Upload multiple students at once via CSV file</p>
-                </div>
-            </div>
-
-            <div class="option-card" onclick="location.href='admin-add-face.html'">
-                <div class="option-icon">📷</div>
-                <div class="option-content">
-                    <h3>Add Face</h3>
-                    <p>Register face data for users to enable secure attendance</p>
-                </div>
-            </div>
-
-            <div class="option-card" onclick="location.href='admin-manage-users.html'">
-                <div class="option-icon">⚙️</div>
-                <div class="option-content">
-                    <h3>Manage Users</h3>
-                    <p>Reset passwords, delete users, and manage accounts</p>
-                </div>
+            <div id="notifList" style="padding: 20px;">
+                <p style="color: var(--gray-400); text-align: center;">No new notifications</p>
             </div>
         </div>
     </div>
 
     <script>
+        let currentUser = null;
+
         (async () => {
             const res = await fetch('/api/session', { credentials: 'same-origin' });
-            const data = await res.json();
-            if (!data.role || data.role !== 'admin') location.href = '/';
+            currentUser = await res.json();
+            if (!currentUser.role || currentUser.role !== 'admin') location.href = '/';
             
-            if (data.name) {
+            if (currentUser.name) {
                 document.getElementById('welcomeHeader').innerHTML = `
                     <img src="images/college-logo.jpg" alt="Logo" class="header-logo">
-                    Welcome, ${data.name}
+                    Welcome, ${currentUser.name}
                 `;
             }
             
             loadStats();
+            loadRecentActivity();
         })();
 
         async function loadStats() {
@@ -139,9 +121,55 @@
             document.getElementById('totalAttendance').textContent = reports.length;
         }
 
+        async function loadRecentActivity() {
+            const res = await fetch('/api/attendance/reports', { credentials: 'same-origin' });
+            const records = await res.json();
+            const container = document.getElementById('recentActivity');
+            
+            if (records.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: var(--gray-400);">
+                        <div style="font-size: 48px; margin-bottom: 12px;">📭</div>
+                        <p>No attendance records yet</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const recent = records.slice(0, 10);
+            container.innerHTML = recent.map(r => `
+                <div class="list-item">
+                    <div>
+                        <strong style="font-size: 15px;">${r.student_name}</strong><br>
+                        <span style="color: var(--gray-500); font-size: 13px;">
+                            ${r.section_name} • ${r.topic} • ${r.subject}
+                        </span><br>
+                        <small style="color: var(--gray-400); font-size: 12px;">
+                            🕐 ${new Date(r.timestamp).toLocaleString()}
+                        </small>
+                    </div>
+                    <span class="badge badge-success">Present</span>
+                </div>
+            `).join('');
+        }
+
+        function toggleNotifications() {
+            const panel = document.getElementById('notifPanel');
+            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        }
+
         function logout() {
             fetch('/api/logout', { credentials: 'same-origin' }).then(() => location.href = '/');
         }
+
+        // Close notifications on click outside
+        document.addEventListener('click', (e) => {
+            const bell = document.getElementById('notificationBell');
+            const panel = document.getElementById('notifPanel');
+            if (!bell.contains(e.target) && !panel.contains(e.target)) {
+                panel.style.display = 'none';
+            }
+        });
     </script>
 </body>
 </html>
