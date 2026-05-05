@@ -52,6 +52,13 @@
                     </label>
                     <input type="checkbox" id="allowPercentage" checked style="width: 20px; height: 20px;">
                 </div>
+                
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <label style="margin: 0; text-transform: none; letter-spacing: 0;">
+                        Enable Dark Mode
+                    </label>
+                    <input type="checkbox" id="darkMode" style="width: 20px; height: 20px;" onchange="toggleDarkMode(this.checked)">
+                </div>
             </div>
             
             <button onclick="saveSettings()" class="btn-primary" style="margin-top: 24px; width: 100%;">
@@ -98,6 +105,18 @@
             if (settings.qrRefreshInterval) document.getElementById('qrRefreshInterval').value = settings.qrRefreshInterval;
             if (settings.enableFaceVerify !== undefined) document.getElementById('enableFaceVerify').checked = settings.enableFaceVerify;
             if (settings.allowPercentage !== undefined) document.getElementById('allowPercentage').checked = settings.allowPercentage;
+            if (settings.darkMode !== undefined) {
+                document.getElementById('darkMode').checked = settings.darkMode;
+                if (settings.darkMode) document.documentElement.setAttribute('dark-mode', '');
+            }
+        }
+
+        function toggleDarkMode(enabled) {
+            if (enabled) {
+                document.documentElement.setAttribute('dark-mode', '');
+            } else {
+                document.documentElement.removeAttribute('dark-mode');
+            }
         }
 
         function saveSettings() {
@@ -106,7 +125,8 @@
                 sessionTimeout: parseInt(document.getElementById('sessionTimeout').value),
                 qrRefreshInterval: parseInt(document.getElementById('qrRefreshInterval').value),
                 enableFaceVerify: document.getElementById('enableFaceVerify').checked,
-                allowPercentage: document.getElementById('allowPercentage').checked
+                allowPercentage: document.getElementById('allowPercentage').checked,
+                darkMode: document.getElementById('darkMode').checked
             };
             
             localStorage.setItem('ait-settings', JSON.stringify(settings));
