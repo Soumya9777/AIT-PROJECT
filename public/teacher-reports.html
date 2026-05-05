@@ -26,22 +26,26 @@
             </div>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
                 <div class="form-group" style="margin-bottom: 0;">
+                    <label>Search Student</label>
+                    <input type="text" id="filterStudent" placeholder="Search by name..." onkeyup="applyFilters()">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
                     <label>Subject</label>
-                    <select id="filterSubject">
+                    <select id="filterSubject" onchange="applyFilters()">
                         <option value="">All Subjects</option>
                     </select>
                 </div>
                 <div class="form-group" style="margin-bottom: 0;">
                     <label>Section</label>
-                    <input type="text" id="filterSection" placeholder="e.g., CSE-A">
+                    <input type="text" id="filterSection" placeholder="e.g., CSE-A" onkeyup="applyFilters()">
                 </div>
                 <div class="form-group" style="margin-bottom: 0;">
                     <label>Date From</label>
-                    <input type="date" id="filterDateFrom">
+                    <input type="date" id="filterDateFrom" onchange="applyFilters()">
                 </div>
                 <div class="form-group" style="margin-bottom: 0;">
                     <label>Date To</label>
-                    <input type="date" id="filterDateTo">
+                    <input type="date" id="filterDateTo" onchange="applyFilters()">
                 </div>
             </div>
             <div style="margin-top: 16px; display: flex; gap: 12px;">
@@ -91,6 +95,7 @@
         function applyFilters() {
             const subject = document.getElementById('filterSubject').value;
             const section = document.getElementById('filterSection').value.toLowerCase();
+            const student = document.getElementById('filterStudent').value.toLowerCase();
             const dateFrom = document.getElementById('filterDateFrom').value;
             const dateTo = document.getElementById('filterDateTo').value;
 
@@ -101,6 +106,9 @@
             }
             if (section) {
                 filtered = filtered.filter(r => r.section_name.toLowerCase().includes(section));
+            }
+            if (student) {
+                filtered = filtered.filter(r => r.student_name.toLowerCase().includes(student));
             }
             if (dateFrom) {
                 filtered = filtered.filter(r => new Date(r.timestamp) >= new Date(dateFrom));

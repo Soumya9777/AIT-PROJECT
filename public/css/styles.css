@@ -822,3 +822,37 @@ body {
         text-align: center;
     }
 }
+
+/* Print Styles */
+@media print {
+    body {
+        background: white;
+    }
+    
+    .header, .btn-primary, .btn-secondary, .btn-danger {
+        display: none !important;
+    }
+    
+    .card {
+        box-shadow: none;
+        border: 1px solid #ccc;
+    }
+    
+    .card-header {
+        border-bottom: 2px solid #000;
+    }
+    
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    table th, table td {
+        border: 1px solid #ccc;
+        padding: 8px;
+    }
+    
+    table th {
+        background: #f0f0f0;
+    }
+}
