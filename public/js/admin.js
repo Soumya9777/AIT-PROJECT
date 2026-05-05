@@ -1,9 +1,9 @@
 // Tab management
-function showTab(tabId) {
+function showTab(tabId, tabButton) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
     document.getElementById(tabId).classList.add('active');
-    event.target.classList.add('active');
+    if (tabButton) tabButton.classList.add('active');
     
     if (tabId === 'addSubject') loadSubjects();
     if (tabId === 'addFace') loadUsersForFace();
