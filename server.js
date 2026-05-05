@@ -461,6 +461,28 @@ app.get('/api/attendance/percentage', requireAuth, (req, res) => {
                 res.json(rows);
             });
         }
+        return;
+    });
+        
+        // Add filters
+        if (req.session.role === 'student') {
+            query += ` WHERE r.student_id = ?`;
+            db.all(query, [req.session.userId], (err, rows) => {
+                if (err) return res.status(500).json({ error: err.message });
+                res.json(rows);
+            });
+        } else if (req.session.role === 'teacher') {
+            query += ` WHERE s.faculty_id = ?`;
+            db.all(query, [req.session.userId], (err, rows) => {
+                if (err) return res.status(500).json({ error: err.message });
+                res.json(rows);
+            });
+        } else {
+            db.all(query, [], (err, rows) => {
+                if (err) return res.status(500).json({ error: err.message });
+                res.json(rows);
+            });
+        }
     });
     let params = [];
     
