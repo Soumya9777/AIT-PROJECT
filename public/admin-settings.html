@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Settings | Admin</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>
+                <img src="images/college-logo.jpg" alt="Logo" class="header-logo">
+                System Settings
+            </h1>
+            <a href="admin.html" class="btn-secondary">Back</a>
+        </header>
+
+        <div class="card">
+            <div class="card-header">
+                <div class="card-header-icon">⚙️</div>
+                <h3>General Settings</h3>
+            </div>
+            
+            <div style="display: grid; gap: 24px;">
+                <div class="form-group">
+                    <label>College Name</label>
+                    <input type="text" id="collegeName" placeholder="NIST" value="NIST">
+                </div>
+                
+                <div class="form-group">
+                    <label>Session Timeout (minutes)</label>
+                    <input type="number" id="sessionTimeout" value="60" min="15" max="480">
+                </div>
+                
+                <div class="form-group">
+                    <label>QR Code Refresh Interval (seconds)</label>
+                    <input type="number" id="qrRefreshInterval" value="5" min="3" max="30">
+                </div>
+                
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <label style="margin: 0; text-transform: none; letter-spacing: 0;">
+                        Enable Face Verification for Login
+                    </label>
+                    <input type="checkbox" id="enableFaceVerify" checked style="width: 20px; height: 20px;">
+                </div>
+                
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <label style="margin: 0; text-transform: none; letter-spacing: 0;">
+                        Allow Students to View Attendance Percentage
+                    </label>
+                    <input type="checkbox" id="allowPercentage" checked style="width: 20px; height: 20px;">
+                </div>
+            </div>
+            
+            <button onclick="saveSettings()" class="btn-primary" style="margin-top: 24px; width: 100%;">
+                💾 Save Settings
+            </button>
+            <div id="settingsMsg" style="margin-top: 16px;"></div>
+        </div>
+
+        <!-- Backup & Restore -->
+        <div class="card" style="margin-top: 24px;">
+            <div class="card-header">
+                <div class="card-header-icon">💾</div>
+                <h3>Backup & Restore</h3>
+            </div>
+            
+            <p style="color: var(--gray-600); margin-bottom: 16px;">
+                Download a backup of the database or restore from a previous backup.
+            </p>
+            
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <button onclick="backupDB()" class="btn-primary">📥 Download Backup</button>
+                <button onclick="document.getElementById('restoreFile').click()" class="btn-secondary">📤 Restore Backup</button>
+                <input type="file" id="restoreFile" accept=".db" style="display: none;" onchange="restoreDB(this)">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (async () => {
+            const res = await fetch('/api/session', { credentials: 'same-origin' });
+            const data = await res.json();
+            if (!data.role || data.role !== 'admin') location.href = '/';
+            
+            loadSettings();
+        })();
+
+        async function loadSettings() {
+            // In a real app, these would come from the database
+            // For now, we'll use localStorage
+            const settings = JSON.parse(localStorage.getItem('ait-settings') || '{}');
+            
+            if (settings.collegeName) document.getElementById('collegeName').value = settings.collegeName;
+            if (settings.sessionTimeout) document.getElementById('sessionTimeout').value = settings.sessionTimeout;
+            if (settings.qrRefreshInterval) document.getElementById('qrRefreshInterval').value = settings.qrRefreshInterval;
+            if (settings.enableFaceVerify !== undefined) document.getElementById('enableFaceVerify').checked = settings.enableFaceVerify;
+            if (settings.allowPercentage !== undefined) document.getElementById('allowPercentage').checked = settings.allowPercentage;
+        }
+
+        function saveSettings() {
+            const settings = {
+                collegeName: document.getElementById('collegeName').value,
+                sessionTimeout: parseInt(document.getElementById('sessionTimeout').value),
+                qrRefreshInterval: parseInt(document.getElementById('qrRefreshInterval').value),
+                enableFaceVerify: document.getElementById('enableFaceVerify').checked,
+                allowPercentage: document.getElementById('allowPercentage').checked
+            };
+            
+            localStorage.setItem('ait-settings', JSON.stringify(settings));
+            
+            const msgEl = document.getElementById('settingsMsg');
+            msgEl.innerHTML = '<div class="text-success">✓ Settings saved successfully!</div>';
+            
+            setTimeout(() => {
+                msgEl.innerHTML = '';
+            }, 3000);
+            
+            showToast('Settings saved!', 'success');
+        }
+
+        function backupDB() {
+            // In a real app, this would trigger a server-side backup
+            showToast('Backup feature coming soon!', 'success');
+        }
+
+        function restoreDB(input) {
+            if (!input.files[0]) return;
+            
+            showToast('Restore feature coming soon!', 'success');
+            input.value = '';
+        }
+
+        function logout() {
+            fetch('/api/logout', { credentials: 'same-origin' }).then(() => location.href = '/');
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                location.href = 'admin.html';
+            }
+        });
+    </script>
+</body>
+</html>
