@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Reports | Teacher Portal</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>
+                <img src="images/college-logo.jpg" alt="Logo" class="header-logo">
+                Attendance Reports
+            </h1>
+            <a href="teacher.html" class="btn-secondary">Back</a>
+        </header>
+
+        <!-- Filters -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-header-icon">🔍</div>
+                <h3>Filters</h3>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label>Subject</label>
+                    <select id="filterSubject">
+                        <option value="">All Subjects</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label>Section</label>
+                    <input type="text" id="filterSection" placeholder="e.g., CSE-A">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label>Date From</label>
+                    <input type="date" id="filterDateFrom">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label>Date To</label>
+                    <input type="date" id="filterDateTo">
+                </div>
+            </div>
+            <div style="margin-top: 16px; display: flex; gap: 12px;">
+                <button onclick="loadReports()" class="btn-primary">🔍 Apply Filters</button>
+                <button onclick="exportCSV()" class="btn-secondary">📥 Export CSV</button>
+            </div>
+        </div>
+
+        <!-- Report Table -->
+        <div class="card" style="margin-top: 24px;">
+            <div class="card-header">
+                <div class="card-header-icon">📋</div>
+                <h3>Attendance Records</h3>
+            </div>
+            <div id="reportTable" style="overflow-x: auto;">
+                <p style="text-align: center; padding: 40px; color: var(--gray-400);">Loading...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allRecords = [];
+
+        (async () => {
+            const res = await fetch('/api/session', { credentials: 'same-origin' });
+            const data = await res.json();
+            if (!data.role || data.role !== 'teacher') location.href = '/';
+            
+            loadSubjects();
+            loadReports();
+        })();
+
+        async function loadSubjects() {
+            const res = await fetch('/api/subjects', { credentials: 'same-origin' });
+            const subjects = await res.json();
+            const select = document.getElementById('filterSubject');
+            select.innerHTML = '<option value="">All Subjects</option>' + 
+                subjects.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+        }
+
+        async function loadReports() {
+            const res = await fetch('/api/attendance/reports', { credentials: 'same-origin' });
+            allRecords = await res.json();
+            applyFilters();
+        }
+
+        function applyFilters() {
+            const subject = document.getElementById('filterSubject').value;
+            const section = document.getElementById('filterSection').value.toLowerCase();
+            const dateFrom = document.getElementById('filterDateFrom').value;
+            const dateTo = document.getElementById('filterDateTo').value;
+
+            let filtered = allRecords;
+
+            if (subject) {
+                filtered = filtered.filter(r => r.subject === subject || !r.subject);
+            }
+            if (section) {
+                filtered = filtered.filter(r => r.section_name.toLowerCase().includes(section));
+            }
+            if (dateFrom) {
+                filtered = filtered.filter(r => new Date(r.timestamp) >= new Date(dateFrom));
+            }
+            if (dateTo) {
+                filtered = filtered.filter(r => new Date(r.timestamp) <= new Date(dateTo + 'T23:59:59'));
+            }
+
+            const container = document.getElementById('reportTable');
+            
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: var(--gray-400);">
+                        <div style="font-size: 48px; margin-bottom: 12px;">📭</div>
+                        <p>No records found</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: var(--gray-50); text-align: left;">
+                            <th style="padding: 12px; font-size: 13px; text-transform: uppercase; color: var(--gray-500);">Student</th>
+                            <th style="padding: 12px; font-size: 13px; text-transform: uppercase; color: var(--gray-500);">Section</th>
+                            <th style="padding: 12px; font-size: 13px; text-transform: uppercase; color: var(--gray-500);">Topic</th>
+                            <th style="padding: 12px; font-size: 13px; text-transform: uppercase; color: var(--gray-500);">Subject</th>
+                            <th style="padding: 12px; font-size: 13px; text-transform: uppercase; color: var(--gray-500);">Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${filtered.map(r => `
+                            <tr style="border-bottom: 1px solid var(--gray-100);">
+                                <td style="padding: 12px; font-weight: 500;">${r.student_name}</td>
+                                <td style="padding: 12px; color: var(--gray-600);">${r.section_name}</td>
+                                <td style="padding: 12px; color: var(--gray-600);">${r.topic}</td>
+                                <td style="padding: 12px;"><span class="badge badge-success">${r.subject || 'N/A'}</span></td>
+                                <td style="padding: 12px; color: var(--gray-400); font-size: 13px;">${new Date(r.timestamp).toLocaleString()}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        function exportCSV() {
+            const subject = document.getElementById('filterSubject').value;
+            const section = document.getElementById('filterSection').value.toLowerCase();
+            const dateFrom = document.getElementById('filterDateFrom').value;
+            const dateTo = document.getElementById('filterDateTo').value;
+
+            let filtered = allRecords;
+
+            if (subject) filtered = filtered.filter(r => r.subject === subject || !r.subject);
+            if (section) filtered = filtered.filter(r => r.section_name.toLowerCase().includes(section));
+            if (dateFrom) filtered = filtered.filter(r => new Date(r.timestamp) >= new Date(dateFrom));
+            if (dateTo) filtered = filtered.filter(r => new Date(r.timestamp) <= new Date(dateTo + 'T23:59:59'));
+
+            let csv = 'Student Name,Section,Topic,Subject,Time\n';
+            filtered.forEach(r => {
+                csv += `"${r.student_name}","${r.section_name}","${r.topic}","${r.subject || 'N/A'}","${new Date(r.timestamp).toLocaleString()}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `attendance_report_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>

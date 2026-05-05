@@ -29,6 +29,9 @@ async function loadAttendancePercentage() {
     document.getElementById('overallDetails').textContent = 
         `Attended ${data.overall.attended} out of ${data.overall.total} sessions`;
     
+    // Render chart
+    renderChart(data.bySubject);
+    
     const subjectDiv = document.getElementById('subjectPercentages');
     if (data.bySubject.length > 0) {
         subjectDiv.innerHTML = data.bySubject.map(s => `
@@ -78,6 +81,48 @@ async function loadAttendance() {
                 <small style="color: var(--gray-400); font-size: 13px;">
                     🕐 ${new Date(r.timestamp).toLocaleString()}
                 </small>
+            </div>
+        </div>
+    `).join('');
+}
+
+function renderChart(subjects) {
+    const chartDiv = document.getElementById('attendanceChart');
+    
+    if (!subjects || subjects.length === 0) {
+        chartDiv.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: var(--gray-400);">
+                <div style="font-size: 48px; margin-bottom: 12px;">📊</div>
+                <p>No data to display</p>
+            </div>
+        `;
+        return;
+    }
+    
+    const maxPercentage = 100;
+    
+    chartDiv.innerHTML = subjects.map(s => `
+        <div style="margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span style="font-size: 14px; font-weight: 600; color: var(--dark);">${s.subject}</span>
+                <span style="font-size: 13px; color: var(--gray-500);">${s.percentage}%</span>
+            </div>
+            <div style="width: 100%; height: 24px; background: var(--gray-100); border-radius: 12px; overflow: hidden;">
+                <div style="
+                    width: ${s.percentage}%;
+                    height: 100%;
+                    background: linear-gradient(90deg, ${s.percentage >= 75 ? 'var(--success)' : 'var(--danger)'}, ${s.percentage >= 75 ? '#34d399' : '#f87171'});
+                    border-radius: 12px;
+                    transition: width 1s ease-out;
+                    display: flex;
+                    align-items: center;
+                    justify-content: flex-end;
+                    padding-right: 8px;
+                    font-size: 12px;
+                    font-weight: 600;
+                    color: white;
+                    min-width: 40px;
+                ">${s.percentage >= 10 ? s.percentage + '%' : ''}</div>
             </div>
         </div>
     `).join('');
