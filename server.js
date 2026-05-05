@@ -272,41 +272,37 @@ app.post('/api/attendance/verify-mark', requireAuth, (req, res) => {
                     if (err) return res.status(500).json({ error: err.message });
                     if (existing) return res.status(400).json({ error: 'Attendance already marked' });
                     
-                    if (faceDescriptor && faceDescriptor.length > 0) {
-                        db.all("SELECT user_id, descriptor FROM face_descriptors WHERE user_id = ?",
-                            [req.session.userId],
-                            (err, faces) => {
-                                if (faces.length === 0) {
-                                    db.run("INSERT INTO attendance_records (session_id, student_id) VALUES (?, ?)",
-                                        [sessionId, req.session.userId],
-                                        (err) => {
-                                            if (err) return res.status(500).json({ error: err.message });
-                                            res.json({ message: 'Attendance marked (no face verification)' });
-                                        });
-                                } else {
-                                    const storedDesc = JSON.parse(faces[0].descriptor);
-                                    const distance = faceDistance(faceDescriptor, storedDesc);
-                                    
-                                    if (distance < 0.6) {
-                                        db.run("INSERT INTO attendance_records (session_id, student_id) VALUES (?, ?)",
-                                            [sessionId, req.session.userId],
-                                            (err) => {
-                                                if (err) return res.status(500).json({ error: err.message });
-                                                res.json({ message: 'Attendance marked with face verification' });
-                                            });
-                                    } else {
-                                        res.status(400).json({ error: 'Face verification failed' });
-                                    }
-                                }
-                            });
-                    } else {
-                        db.run("INSERT INTO attendance_records (session_id, student_id) VALUES (?, ?)",
-                            [sessionId, req.session.userId],
-                            (err) => {
-                                if (err) return res.status(500).json({ error: err.message });
-                                res.json({ message: 'Attendance marked' });
-                            });
-                    }
+                    // MANDATORY: Check if student has registered their face
+                    db.get("SELECT * FROM face_descriptors WHERE user_id = ?",
+                        [req.session.userId],
+                        (err, faceRecord) => {
+                            if (!faceRecord) {
+                                return res.status(400).json({ 
+                                    error: 'Face data not registered! Please register your face first. Contact admin.' 
+                                });
+                            }
+                            
+                            // MANDATORY: Face verification required
+                            if (!faceDescriptor || faceDescriptor.length === 0) {
+                                return res.status(400).json({ 
+                                    error: 'Face capture required! Please capture your face to mark attendance.' 
+                                });
+                            }
+                            
+                            const storedDesc = JSON.parse(faceRecord.descriptor);
+                            const distance = faceDistance(faceDescriptor, storedDesc);
+                            
+                            if (distance < 0.6) {
+                                db.run("INSERT INTO attendance_records (session_id, student_id) VALUES (?, ?)",
+                                    [sessionId, req.session.userId],
+                                    (err) => {
+                                        if (err) return res.status(500).json({ error: err.message });
+                                        res.json({ message: 'Attendance marked with face verification' });
+                                    });
+                            } else {
+                                res.status(400).json({ error: 'Face verification failed. Not recognized.' });
+                            }
+                        });
                 });
         });
 });
