@@ -35,11 +35,11 @@
             </div>
         </div>
 
-        <!-- Step 2: Dates & Topics -->
+        <!-- Step 2: Sessions (Dates & Topics) -->
         <div id="datesSection" class="card hidden" style="margin-top: 24px;">
             <div class="card-header">
                 <div class="card-header-icon">📅</div>
-                <h3>Step 2: Select Date & Topic</h3>
+                <h3>Step 2: Select Session</h3>
             </div>
             <div id="datesList"></div>
         </div>
@@ -64,17 +64,13 @@
                 <div id="absentList"></div>
             </div>
         </div>
-
-        <!-- All Students in Section (for calculating absent) -->
-        <div id="allStudentsSection" class="hidden"></div>
     </div>
 
     <script>
         let allRecords = [];
         let allStudents = [];
         let selectedSection = null;
-        let selectedDate = null;
-        let selectedTopic = null;
+        let selectedSessionId = null;
 
         (async () => {
             const res = await fetch('/api/session', { credentials: 'same-origin' });
@@ -127,32 +123,30 @@
                 return;
             }
 
-            // Group by date and topic
-            const grouped = {};
+            // Get UNIQUE sessions (NOT grouping by date+topic, but by actual session_id)
+            const sessionsMap = {};
             sectionRecords.forEach(r => {
-                const date = new Date(r.timestamp).toLocaleDateString();
-                const key = `${date}|${r.topic}|${r.subject}`;
-                if (!grouped[key]) {
-                    grouped[key] = {
-                        date: date,
-                        topic: r.topic,
-                        subject: r.subject,
+                if (!sessionsMap[r.session_id]) {
+                    sessionsMap[r.session_id] = {
+                        sessionId: r.session_id,
+                        date: new Date(r.timestamp).toLocaleDateString(),
                         time: new Date(r.timestamp).toLocaleTimeString(),
-                        sessionId: r.session_id
+                        topic: r.topic,
+                        subject: r.subject
                     };
                 }
             });
 
             const container = document.getElementById('datesList');
-            container.innerHTML = Object.values(grouped).map(g => `
-                <div class="list-item" onclick="loadAttendanceDetails('${g.sessionId}', '${g.date}', '${g.topic}', '${g.subject}')" style="cursor: pointer;">
+            container.innerHTML = Object.values(sessionsMap).map(s => `
+                <div class="list-item" onclick="loadAttendanceDetails(${s.sessionId}, '${s.date}', '${s.topic}', '${s.subject}')" style="cursor: pointer;">
                     <div>
-                        <strong style="font-size: 16px;">${g.date}</strong><br>
+                        <strong style="font-size: 16px;">${s.date}</strong><br>
                         <span style="color: var(--gray-500); font-size: 14px;">
-                            ${g.topic} • ${g.subject}
+                            ${s.topic} • ${s.subject}
                         </span><br>
                         <span style="color: var(--gray-400); font-size: 13px;">
-                            🕐 ${g.time}
+                            🕐 ${s.time}
                         </span>
                     </div>
                     <span style="color: var(--primary); font-size: 13px;">View Details →</span>
@@ -164,20 +158,17 @@
         }
 
         async function loadAttendanceDetails(sessionId, date, topic, subject) {
-            selectedDate = date;
-            selectedTopic = topic;
-            
+            selectedSessionId = sessionId;
+
             document.getElementById('detailTitle').textContent = `${selectedSection} - ${date} - ${topic}`;
             
-            // Get attended students for this session FROM allRecords (don't re-fetch)
+            // Get attended students for THIS session from allRecords
             const sessionRecords = allRecords.filter(r => r.session_id == sessionId);
             const attendedStudentNames = sessionRecords.map(r => r.student_name);
 
-            // Get students in the SAME section (for absent calculation)
-            const usersRes = await fetch('/api/users', { credentials: 'same-origin' });
-            const allUsers = await usersRes.json();
-            const sectionStudentNames = allUsers
-                .filter(u => u.role === 'student' && u.section === selectedSection)
+            // Get students in the SAME section
+            const sectionStudentNames = allStudents
+                .filter(u => u.section === selectedSection)
                 .map(u => u.name);
 
             // Present students
@@ -213,12 +204,6 @@
                     </div>
                 `).join('');
             }
-
-            document.getElementById('absentCount').textContent = absentNames.length;
-
-            document.getElementById('datesSection').classList.add('hidden');
-            document.getElementById('attendanceDetails').classList.remove('hidden');
-        }
 
             document.getElementById('absentCount').textContent = absentNames.length;
 
