@@ -1,8 +1,15 @@
-// Check auth
+// Check auth and face verification
 (async () => {
     const res = await fetch('/api/session', { credentials: 'same-origin' });
     const data = await res.json();
     if (!data.role || data.role !== 'student') location.href = '/';
+    
+    // Check if face is verified
+    if (!data.faceVerified) {
+        location.href = '/face-verify.html';
+        return;
+    }
+    
     loadAttendancePercentage();
     loadAttendance();
 })();

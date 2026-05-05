@@ -74,12 +74,13 @@ app.post('/api/login', (req, res) => {
             req.session.userId = user.id;
             req.session.role = user.role;
             req.session.name = user.name;
+            req.session.faceVerified = false; // Reset face verification flag
             
-            // Map role to correct page
+            // Students must verify face first, others go directly
             const roleToPage = {
                 'admin': 'admin.html',
                 'teacher': 'teacher.html',
-                'student': 'student.html'
+                'student': 'face-verify.html'  // Force face verification for students
             };
             
             res.json({ message: 'Login successful', role: user.role, name: user.name, redirect: roleToPage[user.role] });
@@ -87,6 +88,16 @@ app.post('/api/login', (req, res) => {
             res.status(401).json({ error: 'Invalid credentials' });
         }
     });
+});
+
+// Face verification endpoint - sets flag after successful face match
+app.post('/api/face-verify', requireAuth, (req, res) => {
+    if (req.session.role !== 'student') {
+        return res.status(403).json({ error: 'Only students need face verification' });
+    }
+    
+    req.session.faceVerified = true;
+    res.json({ message: 'Face verified' });
 });
 
 app.post('/api/change-password', (req, res) => {
@@ -111,8 +122,10 @@ app.post('/api/change-password', (req, res) => {
 });
 
 app.get('/api/logout', (req, res) => {
-    req.session.destroy();
-    res.json({ message: 'Logged out' });
+    req.session.destroy((err) => {
+        if (err) return res.status(500).json({ error: 'Logout failed' });
+        res.json({ message: 'Logged out' });
+    });
 });
 
 app.get('/api/session', (req, res) => {
@@ -121,7 +134,8 @@ app.get('/api/session', (req, res) => {
             id: req.session.userId,
             username: req.session.username,
             name: req.session.name,
-            role: req.session.role
+            role: req.session.role,
+            faceVerified: req.session.faceVerified || false
         });
     } else {
         res.status(401).json({ error: 'Not logged in' });

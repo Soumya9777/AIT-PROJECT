@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Verification | Smart Attendance</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="js/face-api.min.js"></script>
+</head>
+<body>
+    <div class="login-container">
+        <div class="card">
+            <div style="text-align: center; margin-bottom: 24px;">
+                <img src="images/college-logo.jpg" alt="College Logo" style="height: 80px; margin-bottom: 16px;">
+                <h2>Face Verification Required</h2>
+                <p style="color: var(--secondary);">Please verify your face to continue</p>
+            </div>
+
+            <div style="text-align: center;">
+                <video id="faceVideo" width="320" height="240" autoplay style="max-width: 100%; height: auto; border-radius: var(--radius);"></video>
+                <canvas id="faceCanvas" style="display: none;"></canvas>
+                
+                <div id="faceStatus" style="margin: 16px 0; padding: 12px; border-radius: var(--radius-sm); font-weight: 500;">Position your face in front of the camera...</div>
+                
+                <button onclick="verifyFace()" id="verifyBtn" class="btn-primary" style="width: 100%; padding: 16px; font-size: 16px;">Verify Face</button>
+                
+                <div id="verifyMsg" style="margin-top: 16px;"></div>
+                
+                <button onclick="logout()" style="margin-top: 12px; background: none; border: none; color: var(--secondary); cursor: pointer; font-size: 14px;">Cancel / Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let faceDescriptor = null;
+        let detectionInterval = null;
+        let currentUser = null;
+
+        (async () => {
+            // Check session
+            const sessionRes = await fetch('/api/session', { credentials: 'same-origin' });
+            currentUser = await sessionRes.json();
+            
+            if (!currentUser.id || currentUser.role !== 'student') {
+                location.href = '/';
+                return;
+            }
+            
+            // If already verified, redirect to student page
+            if (currentUser.faceVerified) {
+                location.href = 'student.html';
+                return;
+            }
+
+            // Load face-api models
+            await Promise.all([
+                faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
+                faceapi.nets.faceRecognitionNet.loadFromUri('/models'),
+                faceapi.nets.faceLandmark68Net.loadFromUri('/models')
+            ]);
+
+            // Start video
+            const video = document.getElementById('faceVideo');
+            const stream = await navigator.mediaDevices.getUserMedia({video: {}});
+            video.srcObject = stream;
+
+            // Start continuous face detection
+            startFaceDetection();
+        })();
+
+        function startFaceDetection() {
+            const video = document.getElementById('faceVideo');
+            const canvas = document.getElementById('faceCanvas');
+            const faceStatus = document.getElementById('faceStatus');
+            
+            video.width = 160;
+            video.height = 120;
+            canvas.width = 160;
+            canvas.height = 120;
+            
+            detectionInterval = setInterval(async () => {
+                if (video.readyState !== 4) return;
+                
+                canvas.getContext('2d').drawImage(video, 0, 0, 160, 120);
+                
+                const detection = await faceapi.detectSingleFace(canvas, 
+                    new faceapi.TinyFaceDetectorOptions({ inputSize: 160 }))
+                    .withFaceLandmarks()
+                    .withFaceDescriptor();
+                
+                if (detection) {
+                    faceDescriptor = Array.from(detection.descriptor);
+                    faceStatus.textContent = 'Face detected! Click Verify Face button.';
+                    faceStatus.style.background = '#d1fae5';
+                    faceStatus.style.color = '#065f46';
+                    document.getElementById('verifyBtn').disabled = false;
+                } else {
+                    faceDescriptor = null;
+                    faceStatus.textContent = 'Position your face in front of the camera...';
+                    faceStatus.style.background = '#f3f4f6';
+                    faceStatus.style.color = '#374151';
+                    document.getElementById('verifyBtn').disabled = true;
+                }
+            }, 300);
+        }
+
+        async function verifyFace() {
+            if (!faceDescriptor) {
+                alert('No face detected. Please position your face in the camera.');
+                return;
+            }
+
+            const faceStatus = document.getElementById('faceStatus');
+            const verifyMsg = document.getElementById('verifyMsg');
+            
+            faceStatus.textContent = 'Verifying...';
+            faceStatus.style.background = '#dbeafe';
+            faceStatus.style.color = '#1e40af';
+
+            try {
+                // Get stored face descriptor
+                const res = await fetch('/api/faces', { credentials: 'same-origin' });
+                const faces = await res.json();
+                
+                const userFace = faces.find(f => f.userId === currentUser.id);
+                
+                if (!userFace) {
+                    verifyMsg.innerHTML = '<div class="text-danger">No face data registered! Contact admin.</div>';
+                    return;
+                }
+
+                // Compare faces
+                const storedDesc = userFace.descriptor;
+                const distance = faceDistance(storedDesc, faceDescriptor);
+                
+                if (distance < 0.6) {
+                    verifyMsg.innerHTML = '<div class="text-success">✓ Face verified! Redirecting...</div>';
+                    
+                    // Set face verified flag in session
+                    await fetch('/api/face-verify', {
+                        method: 'POST',
+                        credentials: 'same-origin'
+                    });
+                    
+                    setTimeout(() => {
+                        location.href = 'student.html';
+                    }, 1000);
+                } else {
+                    verifyMsg.innerHTML = '<div class="text-danger">Face verification failed. Not recognized.</div>';
+                }
+            } catch (err) {
+                verifyMsg.innerHTML = '<div class="text-danger">Error during verification.</div>';
+            }
+        }
+
+        function faceDistance(desc1, desc2) {
+            let sum = 0;
+            for (let i = 0; i < desc1.length; i++) {
+                sum += Math.pow(desc1[i] - desc2[i], 2);
+            }
+            return Math.sqrt(sum);
+        }
+
+        function logout() {
+            fetch('/api/logout', { credentials: 'same-origin' }).then(() => location.href = '/');
+        }
+    </script>
+</body>
+</html>
