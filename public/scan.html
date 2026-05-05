@@ -81,14 +81,20 @@
             const captureBtn = document.getElementById('captureBtn');
             const faceStatus = document.getElementById('faceStatus');
             
+            // Reduce video resolution for faster processing
+            video.width = 160;
+            video.height = 120;
+            canvas.width = 160;
+            canvas.height = 120;
+            
             faceDetectionInterval = setInterval(async () => {
                 if (video.readyState !== 4) return;
                 
-                canvas.width = video.width;
-                canvas.height = video.height;
-                canvas.getContext('2d').drawImage(video, 0, 0);
+                canvas.getContext('2d').drawImage(video, 0, 0, 160, 120);
                 
-                const detection = await faceapi.detectSingleFace(canvas, new faceapi.TinyFaceDetectorOptions())
+                // Use faster detection with reduced options
+                const detection = await faceapi.detectSingleFace(canvas, 
+                    new faceapi.TinyFaceDetectorOptions({ inputSize: 160 }))
                     .withFaceLandmarks()
                     .withFaceDescriptor();
                 
@@ -104,7 +110,7 @@
                     faceStatus.textContent = 'Position your face in front of the camera...';
                     faceStatus.className = '';
                 }
-            }, 500);
+            }, 300); // Check every 300ms for faster response
         }
 
         function captureFace() {
