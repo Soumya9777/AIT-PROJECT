@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Teacher Portal | Smart Attendance</title>
     <link rel="stylesheet" href="css/styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="container">
@@ -17,47 +17,91 @@
             <button onclick="logout()" class="btn-secondary">Logout</button>
         </header>
 
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">📚</div>
+                <div class="stat-content">
+                    <h3 id="subjectCount">0</h3>
+                    <p>Subjects</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-content">
+                    <h3 id="activeSessionCount">0</h3>
+                    <p>Active Sessions</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">👥</div>
+                <div class="stat-content">
+                    <h3 id="studentCount">0</h3>
+                    <p>Total Students</p>
+                </div>
+            </div>
+        </div>
+
         <!-- Create Session Form -->
         <div class="card">
-            <h3>Create Attendance Session</h3>
+            <div class="card-header">
+                <div class="card-header-icon">➕</div>
+                <h3>Create Attendance Session</h3>
+            </div>
             <form id="sessionForm">
-                <div class="form-group">
-                    <label>Section</label>
-                    <input type="text" id="sectionName" required>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                    <div class="form-group">
+                        <label>Section</label>
+                        <input type="text" id="sectionName" placeholder="e.g., CSE-A" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Subject</label>
+                        <select id="subjectSelect" required></select>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Subject</label>
-                    <select id="subjectSelect"></select>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                    <div class="form-group">
+                        <label>Topic</label>
+                        <input type="text" id="topic" placeholder="e.g., Arrays & Strings" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Start Time</label>
+                        <input type="time" id="startTime" required>
+                    </div>
+                    <div class="form-group">
+                        <label>End Time</label>
+                        <input type="time" id="endTime" required>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Topic</label>
-                    <input type="text" id="topic" required>
-                </div>
-                <div class="form-group">
-                    <label>Start Time</label>
-                    <input type="time" id="startTime" required>
-                </div>
-                <div class="form-group">
-                    <label>End Time</label>
-                    <input type="time" id="endTime" required>
-                </div>
-                <button type="submit" class="btn-primary">Start Session</button>
+                <button type="submit" class="btn-primary">🚀 Start Session</button>
             </form>
             <div id="sessionMsg" class="hidden"></div>
         </div>
 
         <!-- Active Session QR -->
-        <div id="qrSection" class="card hidden" style="text-align: center; margin-top: 20px;">
-            <h3>Active Session QR Code</h3>
-            <p>QR refreshes every 5 seconds</p>
-            <img id="qrImage" style="margin: 20px auto; display: block;">
-            <div id="sessionInfo"></div>
-            <button onclick="stopSession()" class="btn-secondary">Stop Session</button>
+        <div id="qrSection" class="card hidden">
+            <div class="card-header">
+                <div class="card-header-icon">📱</div>
+                <h3>Active Session QR Code</h3>
+            </div>
+            <div class="qr-container">
+                <p style="color: var(--gray-500); margin-bottom: 16px; font-size: 14px;">
+                    ⚡ QR refreshes automatically every 5 seconds
+                </p>
+                <img id="qrImage" style="max-width: 240px;">
+                <div id="sessionInfo" style="margin-top: 20px;"></div>
+            </div>
+            <button onclick="stopSession()" class="btn-danger" style="margin-top: 16px; width: 100%;">
+                ⏹ Stop Session
+            </button>
         </div>
 
         <!-- Active Sessions List -->
-        <div class="card" style="margin-top: 20px;">
-            <h3>Active Sessions</h3>
+        <div class="card" style="margin-top: 24px;">
+            <div class="card-header">
+                <div class="card-header-icon">📋</div>
+                <h3>My Active Sessions</h3>
+            </div>
             <div id="activeSessions"></div>
         </div>
     </div>

@@ -1,7 +1,7 @@
 let currentSessionId = null;
 let qrInterval = null;
 
-// Load subjects and active sessions on page load
+// Load data on page load
 (async () => {
     const res = await fetch('/api/session', { credentials: 'same-origin' });
     const data = await res.json();
@@ -9,7 +9,27 @@ let qrInterval = null;
     
     loadSubjects();
     loadActiveSessions();
+    loadStats();
 })();
+
+async function loadStats() {
+    // Load subjects count
+    const subjectsRes = await fetch('/api/subjects', { credentials: 'same-origin' });
+    const subjects = await subjectsRes.json();
+    document.getElementById('subjectCount').textContent = subjects.length;
+    
+    // Load active sessions count
+    const sessionsRes = await fetch('/api/attendance/sessions/active', { credentials: 'same-origin' });
+    const sessions = await sessionsRes.json();
+    const mySessions = sessions.filter(s => s.teacher_name === (await (await fetch('/api/session', { credentials: 'same-origin' })).json()).name);
+    document.getElementById('activeSessionCount').textContent = mySessions.length;
+    
+    // Load student count
+    const usersRes = await fetch('/api/users', { credentials: 'same-origin' });
+    const users = await usersRes.json();
+    const studentCount = users.filter(u => u.role === 'student').length;
+    document.getElementById('studentCount').textContent = studentCount;
+}
 
 async function loadSubjects() {
     const res = await fetch('/api/subjects', { credentials: 'same-origin' });
@@ -40,10 +60,11 @@ document.getElementById('sessionForm').addEventListener('submit', async (e) => {
     if (res.ok) {
         currentSessionId = result.sessionId;
         startQrRefresh();
-        document.getElementById('sessionMsg').textContent = 'Session started!';
+        document.getElementById('sessionMsg').textContent = 'Session started successfully!';
         document.getElementById('sessionMsg').className = 'text-success';
         document.getElementById('sessionMsg').classList.remove('hidden');
         loadActiveSessions();
+        loadStats();
     }
 });
 
@@ -52,13 +73,9 @@ function startQrRefresh() {
     const qrSection = document.getElementById('qrSection');
     qrSection.classList.remove('hidden');
     
-    // Clear existing interval
     if (qrInterval) clearInterval(qrInterval);
     
-    // Load initial QR
     loadQr();
-    
-    // Refresh every 5 seconds
     qrInterval = setInterval(loadQr, 5000);
 }
 
@@ -71,8 +88,16 @@ async function loadQr() {
     if (res.ok) {
         document.getElementById('qrImage').src = data.qrCode;
         document.getElementById('sessionInfo').innerHTML = `
-            <p>Session ID: ${currentSessionId}</p>
-            <p>Token expires in: ${data.expiresIn} seconds</p>
+            <div style="display: flex; justify-content: center; gap: 24px; margin-top: 16px;">
+                <div>
+                    <div style="font-size: 24px; font-weight: 700; color: var(--primary);">${currentSessionId}</div>
+                    <div style="font-size: 13px; color: var(--gray-500);">Session ID</div>
+                </div>
+                <div>
+                    <div style="font-size: 24px; font-weight: 700; color: var(--warning);">${data.expiresIn}s</div>
+                    <div style="font-size: 13px; color: var(--gray-500);">Refreshes in</div>
+                </div>
+            </div>
         `;
     } else {
         stopSession();
@@ -94,6 +119,7 @@ async function stopSession() {
     currentSessionId = null;
     document.getElementById('qrSection').classList.add('hidden');
     loadActiveSessions();
+    loadStats();
 }
 
 async function loadActiveSessions() {
@@ -105,14 +131,30 @@ async function loadActiveSessions() {
     
     const mySessions = sessions.filter(s => s.teacher_name === userData.name);
     
-    container.innerHTML = mySessions.length ? 
-        mySessions.map(s => `
-            <div class="card" style="padding:10px;margin:5px 0">
-                <strong>${s.section_name}</strong> - ${s.topic} (${s.subject})<br>
-                ${s.start_time} to ${s.end_time}
+    if (mySessions.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: var(--gray-400);">
+                <div style="font-size: 48px; margin-bottom: 12px;">📭</div>
+                <p>No active sessions</p>
             </div>
-        `).join('') : 
-        '<p>No active sessions.</p>';
+        `;
+        return;
+    }
+    
+    container.innerHTML = mySessions.map(s => `
+        <div class="list-item">
+            <div>
+                <strong style="font-size: 16px;">${s.section_name}</strong><br>
+                <span style="color: var(--gray-500); font-size: 14px;">
+                    ${s.topic} • ${s.subject}
+                </span><br>
+                <span style="color: var(--gray-400); font-size: 13px;">
+                    🕐 ${s.start_time} - ${s.end_time}
+                </span>
+            </div>
+            <span class="badge badge-success">Active</span>
+        </div>
+    `).join('');
 }
 
 function logout() {

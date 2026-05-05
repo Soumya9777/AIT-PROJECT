@@ -4,7 +4,6 @@
     const data = await res.json();
     if (!data.role || data.role !== 'student') location.href = '/';
     
-    // Check if face is verified
     if (!data.faceVerified) {
         location.href = '/face-verify.html';
         return;
@@ -24,15 +23,26 @@ async function loadAttendancePercentage() {
     
     const subjectDiv = document.getElementById('subjectPercentages');
     if (data.bySubject.length > 0) {
-        subjectDiv.innerHTML = '<h4>By Subject</h4>' + 
-            data.bySubject.map(s => `
-                <div class="card" style="padding:10px;margin:5px 0; display: flex; justify-content: space-between; align-items: center;">
-                    <span><strong>${s.subject}</strong></span>
-                    <span style="color: ${s.percentage >= 75 ? '#28a745' : '#dc3545'}; font-weight: 600;">
-                        ${s.percentage}% (${s.attended}/${s.total})
+        subjectDiv.innerHTML = data.bySubject.map(s => `
+            <div class="list-item">
+                <div>
+                    <strong style="font-size: 15px;">${s.subject}</strong><br>
+                    <span style="color: var(--gray-500); font-size: 13px;">
+                        ${s.attended} / ${s.total} sessions
                     </span>
                 </div>
-            `).join('');
+                <span class="badge ${s.percentage >= 75 ? 'badge-success' : 'badge-danger'}">
+                    ${s.percentage}%
+                </span>
+            </div>
+        `).join('');
+    } else {
+        subjectDiv.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: var(--gray-400);">
+                <div style="font-size: 48px; margin-bottom: 12px;">📭</div>
+                <p>No attendance records yet</p>
+            </div>
+        `;
     }
 }
 
@@ -41,40 +51,29 @@ async function loadAttendance() {
     const records = await res.json();
     const container = document.getElementById('attendanceList');
     
-    container.innerHTML = records.length ? 
-        records.map(r => `
-            <div class="card" style="padding:10px;margin:5px 0">
-                <strong>${r.section_name}</strong> - ${r.topic} (${r.subject})<br>
-                <small>${new Date(r.timestamp).toLocaleString()}</small>
+    if (records.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: var(--gray-400);">
+                <div style="font-size: 48px; margin-bottom: 12px;">📋</div>
+                <p>No attendance records yet</p>
             </div>
-        `).join('') : 
-        '<p>No attendance records yet.</p>';
-}
-
-// Check if face data is registered on page load
-(async () => {
-    try {
-        const res = await fetch('/api/faces', { credentials: 'same-origin' });
-        const faces = await res.json();
-        const currentUserRes = await fetch('/api/session', { credentials: 'same-origin' });
-        const currentUser = await currentUserRes.json();
-        const hasFaceData = faces.some(f => f.userId === currentUser.id);
-        
-        if (!hasFaceData) {
-            const scanLink = document.querySelector('a[href="scan.html"]');
-            if (scanLink) {
-                scanLink.style.pointerEvents = 'none';
-                scanLink.style.opacity = '0.5';
-                scanLink.insertAdjacentHTML('afterend', 
-                    '<div style="color: #dc3545; margin-top: 10px; padding: 10px; background: #f8d7da; border-radius: 8px;">' +
-                    '⚠️ Face data not registered! Contact admin to register your face before marking attendance.' +
-                    '</div>');
-            }
-        }
-    } catch (err) {
-        console.error('Error checking face data:', err);
+        `;
+        return;
     }
-})();
+    
+    container.innerHTML = records.map(r => `
+        <div class="list-item">
+            <div>
+                <strong style="font-size: 15px;">${r.section_name}</strong><br>
+                <span style="color: var(--gray-600);">${r.topic}</span>
+                <span class="badge badge-success" style="margin-left: 8px;">${r.subject}</span><br>
+                <small style="color: var(--gray-400); font-size: 13px;">
+                    🕐 ${new Date(r.timestamp).toLocaleString()}
+                </small>
+            </div>
+        </div>
+    `).join('');
+}
 
 function logout() {
     fetch('/api/logout', { credentials: 'same-origin' }).then(() => location.href = '/');

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Portal | Smart Attendance</title>
     <link rel="stylesheet" href="css/styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="container">
@@ -17,30 +17,41 @@
             <button onclick="logout()" class="btn-secondary">Logout</button>
         </header>
 
-        <div class="card" style="text-align: center; padding: 40px;">
-            <h3>Attendance</h3>
-            <p>Click below to scan QR and mark your attendance</p>
-            <a href="scan.html" class="btn-primary" style="display: inline-block; margin-top: 20px; text-decoration: none;">
-                Scan & Mark Attendance
-            </a>
-        </div>
-
+        <!-- Overall Attendance Percentage -->
         <div id="attendancePercentage">
-            <!-- Overall Percentage Card -->
             <div class="percentage-display">
                 <div id="overallPercentage" class="percentage-number">0%</div>
                 <div id="overallDetails" class="percentage-label">Loading...</div>
             </div>
             
             <!-- Subject-wise Percentages -->
-            <div class="card" style="margin-top: 20px;">
-                <h3>Attendance by Subject</h3>
+            <div class="card" style="margin-top: 24px;">
+                <div class="card-header">
+                    <div class="card-header-icon">📊</div>
+                    <h3>Attendance by Subject</h3>
+                </div>
                 <div id="subjectPercentages"></div>
             </div>
         </div>
 
-        <div class="card" style="margin-top: 20px;">
-            <h3>My Attendance Records</h3>
+        <!-- Quick Action -->
+        <div class="card" style="text-align: center; padding: 40px;">
+            <div style="font-size: 64px; margin-bottom: 16px;">📱</div>
+            <h3 style="margin-bottom: 8px;">Mark Your Attendance</h3>
+            <p style="color: var(--gray-500); margin-bottom: 24px;">
+                Scan the QR code shown by your teacher to mark attendance
+            </p>
+            <a href="scan.html" class="btn-primary" style="text-decoration: none; font-size: 18px; padding: 18px 36px;">
+                📷 Scan & Mark Attendance
+            </a>
+        </div>
+
+        <!-- Attendance Records -->
+        <div class="card" style="margin-top: 24px;">
+            <div class="card-header">
+                <div class="card-header-icon">📋</div>
+                <h3>Recent Attendance Records</h3>
+            </div>
             <div id="attendanceList"></div>
         </div>
     </div>
