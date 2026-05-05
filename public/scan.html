@@ -6,7 +6,6 @@
     <title>Scan Attendance | Smart Attendance</title>
     <link rel="stylesheet" href="css/styles.css">
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-    <script src="js/face-api.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -18,148 +17,97 @@
             <a href="student.html" class="btn-secondary">Back</a>
         </header>
 
-        <div class="card">
+        <div class="card" style="text-align: center;">
             <h3>Step 1: Scan QR Code</h3>
-            <div id="qr-reader" style="width: 300px; margin: 0 auto;"></div>
-            <div id="qrResult" class="hidden" style="margin-top: 10px;"></div>
+            <p style="color: var(--secondary); margin-bottom: 20px;">Position the QR code within the frame</p>
+            <div id="qr-reader" style="width: 100%; max-width: 300px; margin: 0 auto;"></div>
+            <div id="qrResult" class="hidden" style="margin-top: 16px; padding: 12px; background: #d1fae5; border-radius: var(--radius-sm);"></div>
         </div>
 
-        <div class="card" style="margin-top: 20px;">
-            <h3>Step 2: Verify Face</h3>
-            <video id="faceVideo" width="320" height="240" autoplay style="display: block; margin: 0 auto;"></video>
-            <canvas id="faceCanvas" style="display: none;"></canvas>
-            <button id="captureBtn" onclick="captureFace()" class="btn-primary" style="margin-top: 10px; width: 100%; display: none;">Face Detected! Click to Capture</button>
-            <div id="faceStatus" style="margin-top: 10px; text-align: center; color: #666;">Position your face in front of the camera...</div>
-        </div>
-
-        <div id="markAttendance" class="card hidden" style="margin-top: 20px; text-align: center;">
-            <button onclick="markAttendance()" class="btn-primary">Confirm & Mark Attendance</button>
-            <div id="attendanceMsg" style="margin-top: 10px;"></div>
+        <div id="markAttendance" class="card hidden" style="text-align: center; margin-top: 20px;">
+            <h3 style="color: var(--success);">✓ QR Code Scanned!</h3>
+            <p>Your attendance is being marked...</p>
+            <div id="attendanceMsg" style="margin-top: 16px;"></div>
         </div>
     </div>
 
     <script>
         let scannedSessionId = null;
         let scannedToken = null;
-        let faceDescriptor = null;
-        let faceDetectionInterval = null;
 
-        // Load face-api models
+        // Check auth
         (async () => {
-            await Promise.all([
-                faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
-                faceapi.nets.faceRecognitionNet.loadFromUri('/models'),
-                faceapi.nets.faceLandmark68Net.loadFromUri('/models')
-            ]);
+            const res = await fetch('/api/session', { credentials: 'same-origin' });
+            const data = await res.json();
+            if (!data.id || data.role !== 'student') location.href = '/';
             
-            // Start video
-            const video = document.getElementById('faceVideo');
-            const stream = await navigator.mediaDevices.getUserMedia({video: {}});
-            video.srcObject = stream;
-
-            // Start continuous face detection
-            startFaceDetection();
-
-            // Check session
-            const sessionRes = await fetch('/api/session', { credentials: 'same-origin' });
-            const sessionData = await sessionRes.json();
-            if (!sessionData.role || sessionData.role !== 'student') location.href = '/';
-
-            // Start QR scanner
-            const html5Qrcode = new Html5Qrcode("qr-reader");
-            html5Qrcode.start(
-                {facingMode: "environment"},
-                {fps: 10, qrbox: 250},
-                (decodedText) => {
-                    const data = JSON.parse(decodedText);
-                    scannedSessionId = data.sessionId;
-                    scannedToken = data.token;
-                    document.getElementById('qrResult').innerHTML = `QR Scanned! Session ID: ${scannedSessionId}`;
-                    document.getElementById('qrResult').classList.remove('hidden');
-                    html5Qrcode.stop();
-                    checkReadyToMark();
-                },
-                (error) => {}
-            ).catch(err => console.error(err));
-        })();
-
-        function startFaceDetection() {
-            const video = document.getElementById('faceVideo');
-            const canvas = document.getElementById('faceCanvas');
-            const captureBtn = document.getElementById('captureBtn');
-            const faceStatus = document.getElementById('faceStatus');
-            
-            // Reduce video resolution for faster processing
-            video.width = 160;
-            video.height = 120;
-            canvas.width = 160;
-            canvas.height = 120;
-            
-            faceDetectionInterval = setInterval(async () => {
-                if (video.readyState !== 4) return;
-                
-                canvas.getContext('2d').drawImage(video, 0, 0, 160, 120);
-                
-                // Use faster detection with reduced options
-                const detection = await faceapi.detectSingleFace(canvas, 
-                    new faceapi.TinyFaceDetectorOptions({ inputSize: 160 }))
-                    .withFaceLandmarks()
-                    .withFaceDescriptor();
-                
-                if (detection) {
-                    faceDescriptor = Array.from(detection.descriptor);
-                    captureBtn.style.display = 'block';
-                    captureBtn.textContent = 'Face Detected! Click to Capture';
-                    faceStatus.textContent = 'Face detected! Click the button below to capture.';
-                    faceStatus.className = 'text-success';
-                } else {
-                    faceDescriptor = null;
-                    captureBtn.style.display = 'none';
-                    faceStatus.textContent = 'Position your face in front of the camera...';
-                    faceStatus.className = '';
-                }
-            }, 300); // Check every 300ms for faster response
-        }
-
-        function captureFace() {
-            if (!faceDescriptor) {
-                alert('No face detected. Position your face in the camera.');
+            // Check face verification
+            if (!data.faceVerified) {
+                location.href = '/face-verify.html';
                 return;
             }
-            document.getElementById('faceStatus').innerHTML = 'Face captured successfully!';
-            checkReadyToMark();
-        }
+        })();
 
-        function checkReadyToMark() {
-            if (scannedSessionId && scannedToken && faceDescriptor) {
-                document.getElementById('markAttendance').classList.remove('hidden');
-            }
-        }
+        // Start QR scanner
+        const html5Qrcode = new Html5Qrcode("qr-reader");
+        html5Qrcode.start(
+            { facingMode: "environment" },
+            { fps: 10, qrbox: 250 },
+            (decodedText) => {
+                const data = JSON.parse(decodedText);
+                scannedSessionId = data.sessionId;
+                scannedToken = data.token;
+                
+                document.getElementById('qrResult').innerHTML = `✓ QR Scanned! Session ID: ${scannedSessionId}`;
+                document.getElementById('qrResult').classList.remove('hidden');
+                
+                // Stop scanner
+                html5Qrcode.stop();
+                
+                // Mark attendance
+                markAttendance();
+            },
+            (error) => {}
+        ).catch(err => console.error(err));
 
         async function markAttendance() {
+            const markDiv = document.getElementById('markAttendance');
+            markDiv.classList.remove('hidden');
+            
             const res = await fetch('/api/attendance/verify-mark', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
                     sessionId: scannedSessionId,
-                    token: scannedToken,
-                    faceDescriptor: faceDescriptor
+                    token: scannedToken
                 }),
                 credentials: 'same-origin'
             });
             
-            const msgEl = document.getElementById('attendanceMsg');
             const data = await res.json();
+            const msgEl = document.getElementById('attendanceMsg');
             
             if (res.ok) {
-                msgEl.textContent = 'Attendance marked successfully!';
-                msgEl.className = 'text-success';
-                setTimeout(() => location.href = 'student.html', 2000);
+                msgEl.innerHTML = `
+                    <div style="padding: 16px; background: #d1fae5; border-radius: var(--radius-sm);">
+                        <h3 style="color: var(--success);">✓ Attendance Marked!</h3>
+                        <p>${data.message}</p>
+                        <a href="student.html" class="btn-primary" style="display: inline-block; margin-top: 12px; text-decoration: none;">
+                            Back to Dashboard
+                        </a>
+                    </div>
+                `;
             } else {
-                msgEl.textContent = data.error || 'Error marking attendance';
-                msgEl.className = 'text-danger';
+                msgEl.innerHTML = `
+                    <div style="padding: 16px; background: #fee2e2; border-radius: var(--radius-sm);">
+                        <h3 style="color: var(--danger);">✗ Failed</h3>
+                        <p>${data.error}</p>
+                        <button onclick="location.reload()" class="btn-secondary" style="margin-top: 12px;">
+                            Try Again
+                        </button>
+                    </div>
+                `;
             }
-            msgEl.classList.remove('hidden');
         }
     </script>
 </body>
