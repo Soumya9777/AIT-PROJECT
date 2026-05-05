@@ -54,7 +54,8 @@
                     password: newPassword.value,
                     name: newName.value,
                     role: newRole.value
-                })
+                }),
+                credentials: 'same-origin'
             });
             
             const msgEl = document.getElementById('userMsg');
@@ -70,7 +71,7 @@
         });
 
         (async () => {
-            const res = await fetch('/api/session');
+            const res = await fetch('/api/session', { credentials: 'same-origin' });
             const data = await res.json();
             if (!data.role || data.role !== 'admin') location.href = '/';
         })();

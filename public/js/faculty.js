@@ -3,7 +3,7 @@ let qrInterval = null;
 
 // Load subjects and active sessions on page load
 (async () => {
-    const res = await fetch('/api/session');
+    const res = await fetch('/api/session', { credentials: 'same-origin' });
     const data = await res.json();
     if (!data.role || data.role !== 'teacher') location.href = '/';
     
@@ -12,7 +12,7 @@ let qrInterval = null;
 })();
 
 async function loadSubjects() {
-    const res = await fetch('/api/subjects');
+    const res = await fetch('/api/subjects', { credentials: 'same-origin' });
     const subjects = await res.json();
     const select = document.getElementById('subjectSelect');
     select.innerHTML = subjects.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
@@ -32,7 +32,8 @@ document.getElementById('sessionForm').addEventListener('submit', async (e) => {
     const res = await fetch('/api/attendance/start', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(data)
+        body: JSON.stringify(data),
+        credentials: 'same-origin'
     });
     
     const result = await res.json();
@@ -64,7 +65,7 @@ function startQrRefresh() {
 async function loadQr() {
     if (!currentSessionId) return;
     
-    const res = await fetch(`/api/attendance/qr/${currentSessionId}`);
+    const res = await fetch(`/api/attendance/qr/${currentSessionId}`, { credentials: 'same-origin' });
     const data = await res.json();
     
     if (res.ok) {
@@ -84,7 +85,8 @@ async function stopSession() {
     await fetch('/api/attendance/stop', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({sessionId: currentSessionId})
+        body: JSON.stringify({sessionId: currentSessionId}),
+        credentials: 'same-origin'
     });
     
     clearInterval(qrInterval);
@@ -95,9 +97,9 @@ async function stopSession() {
 }
 
 async function loadActiveSessions() {
-    const res = await fetch('/api/attendance/sessions/active');
+    const res = await fetch('/api/attendance/sessions/active', { credentials: 'same-origin' });
     const sessions = await res.json();
-    const sessionRes = await fetch('/api/session');
+    const sessionRes = await fetch('/api/session', { credentials: 'same-origin' });
     const userData = await sessionRes.json();
     const container = document.getElementById('activeSessions');
     
@@ -114,5 +116,5 @@ async function loadActiveSessions() {
 }
 
 function logout() {
-    fetch('/api/logout').then(() => location.href = '/');
+    fetch('/api/logout', { credentials: 'same-origin' }).then(() => location.href = '/');
 }

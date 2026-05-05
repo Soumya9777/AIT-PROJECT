@@ -1,116 +1,77 @@
-// Basic Utilities and Auth Logic
-
-document.addEventListener('DOMContentLoaded', () => {
-    // Login Form Handler
-    const loginForm = document.getElementById('loginForm');
-    if (loginForm) {
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const errorDiv = document.getElementById('loginError');
-
-            try {
-                const res = await fetch('/api/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password })
-                });
-
-                const data = await res.json();
-
-                if (res.ok) {
-                    if (data.requiresPasswordChange) {
-                        // Switch to Change Password form
-                        document.getElementById('loginSection').classList.add('hidden');
-                        document.getElementById('changePasswordSection').classList.remove('hidden');
-                        document.getElementById('cpUsername').value = data.username;
-                        document.getElementById('cpTempPassword').value = password;
-                    } else {
-                        // Redirect based on role
-                        if (data.role === 'admin') window.location.href = '/admin.html';
-                        else if (data.role === 'teacher') window.location.href = '/faculty.html';
-                        else if (data.role === 'student') window.location.href = '/student.html';
-                    }
-                } else {
-                    errorDiv.textContent = data.error;
-                    errorDiv.classList.remove('hidden');
-                }
-            } catch (err) {
-                errorDiv.textContent = 'Server error. Try again.';
-                errorDiv.classList.remove('hidden');
-            }
-        });
-    }
-
-    // Change Password Form Handler
-    const cpForm = document.getElementById('changePasswordForm');
-    if (cpForm) {
-        cpForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const username = document.getElementById('cpUsername').value;
-            const temporaryPassword = document.getElementById('cpTempPassword').value;
-            const newPassword = document.getElementById('newPassword').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-            const cpError = document.getElementById('cpError');
-
-            if (newPassword !== confirmPassword) {
-                cpError.textContent = "Passwords do not match.";
-                cpError.classList.remove('hidden');
-                return;
-            }
-
-            try {
-                const res = await fetch('/api/change-password', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, temporaryPassword, newPassword })
-                });
-
-                const data = await res.json();
-
-                if (res.ok) {
-                    // Redirect based on role
-                    if (data.role === 'admin') window.location.href = '/admin.html';
-                    else if (data.role === 'teacher') window.location.href = '/faculty.html';
-                    else if (data.role === 'student') window.location.href = '/student.html';
-                } else {
-                    cpError.textContent = data.error;
-                    cpError.classList.remove('hidden');
-                }
-            } catch (err) {
-                cpError.textContent = 'Server error. Try again.';
-                cpError.classList.remove('hidden');
-            }
-        });
-    }
-
-    // Logout Handler
-    const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', async () => {
-            await fetch('/api/logout');
-            window.location.href = '/index.html';
-        });
-    }
-
-    // Session Check (if not on login page)
-    if (!window.location.pathname.endsWith('index.html') && window.location.pathname !== '/') {
-        checkSession();
+// Login form handler
+document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    
+    const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({username, password}),
+        credentials: 'same-origin' // Send cookies
+    });
+    
+    const data = await res.json();
+    
+    if (res.ok) {
+        if (data.requiresPasswordChange) {
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('changePasswordSection').classList.remove('hidden');
+            document.getElementById('cpUsername').value = data.username;
+            document.getElementById('cpTempPassword').value = password; // Store temp password
+        } else {
+            window.location.href = data.role + '.html';
+        }
+    } else {
+        document.getElementById('loginError').textContent = data.error;
+        document.getElementById('loginError').classList.remove('hidden');
     }
 });
 
-async function checkSession() {
+// Change password handler
+document.getElementById('changePasswordForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    if (newPassword !== confirmPassword) {
+        document.getElementById('cpError').textContent = 'Passwords do not match';
+        document.getElementById('cpError').classList.remove('hidden');
+        return;
+    }
+    
+    const res = await fetch('/api/change-password', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            username: document.getElementById('cpUsername').value,
+            temporaryPassword: document.getElementById('cpTempPassword').value,
+            newPassword
+        }),
+        credentials: 'same-origin'
+    });
+    
+    const data = await res.json();
+    
+    if (res.ok) {
+        window.location.href = data.role + '.html';
+    } else {
+        document.getElementById('cpError').textContent = data.error;
+        document.getElementById('cpError').classList.remove('hidden');
+    }
+});
+
+// Check existing session on page load
+(async () => {
     try {
-        const res = await fetch('/api/session');
-        if (!res.ok) {
-            window.location.href = '/index.html';
-        } else {
-            const data = await res.json();
-            const nameDisplay = document.getElementById('userNameDisplay');
-            if (nameDisplay) nameDisplay.textContent = data.name;
+        const res = await fetch('/api/session', {
+            credentials: 'same-origin'
+        });
+        const data = await res.json();
+        if (data.id) {
+            window.location.href = data.role + '.html';
         }
     } catch (err) {
-        window.location.href = '/index.html';
+        console.error('Session check failed:', err);
     }
-}
+})();

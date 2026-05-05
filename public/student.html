@@ -50,9 +50,11 @@
         // Check if face data is registered on page load
         (async () => {
             try {
-                const res = await fetch('/api/faces');
+                const res = await fetch('/api/faces', { credentials: 'same-origin' });
                 const faces = await res.json();
-                const hasFaceData = faces.some(f => f.userId === (await (await fetch('/api/session')).json()).id);
+                const currentUserRes = await fetch('/api/session', { credentials: 'same-origin' });
+                const currentUser = await currentUserRes.json();
+                const hasFaceData = faces.some(f => f.userId === currentUser.id);
                 
                 if (!hasFaceData) {
                     const scanLink = document.querySelector('a[href="scan.html"]');

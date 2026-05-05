@@ -41,7 +41,7 @@
         let detectionInterval = null;
 
         (async () => {
-            const res = await fetch('/api/session');
+            const res = await fetch('/api/session', { credentials: 'same-origin' });
             const data = await res.json();
             if (!data.role || data.role !== 'admin') location.href = '/';
 
@@ -55,7 +55,7 @@
             const stream = await navigator.mediaDevices.getUserMedia({video: {}});
             video.srcObject = stream;
 
-            const usersRes = await fetch('/api/users/without-faces');
+            const usersRes = await fetch('/api/users/without-faces', { credentials: 'same-origin' });
             const users = await usersRes.json();
             const select = document.getElementById('faceUserId');
             select.innerHTML = users.map(u => `<option value="${u.id}">${u.name} (${u.role})</option>`).join('');
@@ -120,7 +120,8 @@
                 body: JSON.stringify({
                     userId: faceUserId.value,
                     descriptor: faceDescriptor
-                })
+                }),
+                credentials: 'same-origin'
             });
             
             const msgEl = document.getElementById('faceMsg');

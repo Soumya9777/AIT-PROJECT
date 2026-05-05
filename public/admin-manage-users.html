@@ -24,7 +24,7 @@
 
     <script>
         async function loadUsers() {
-            const res = await fetch('/api/users');
+            const res = await fetch('/api/users', { credentials: 'same-origin' });
             const users = await res.json();
             document.getElementById('usersList').innerHTML = users.map(u => `
                 <div class="card" style="padding:10px;margin:5px 0; display: flex; justify-content: space-between; align-items: center;">
@@ -47,7 +47,8 @@
             const res = await fetch('/api/users/reset-password', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({userId, newTempPassword})
+                body: JSON.stringify({userId, newTempPassword}),
+                credentials: 'same-origin'
             });
             
             if (res.ok) {
@@ -61,7 +62,10 @@
         async function deleteUser(userId, userName) {
             if (!confirm(`Delete user "${userName}"? This cannot be undone.`)) return;
             
-            const res = await fetch(`/api/users/${userId}`, { method: 'DELETE' });
+            const res = await fetch(`/api/users/${userId}`, { 
+                method: 'DELETE',
+                credentials: 'same-origin'
+            });
             
             if (res.ok) {
                 alert('User deleted!');
@@ -72,7 +76,7 @@
         }
 
         (async () => {
-            const res = await fetch('/api/session');
+            const res = await fetch('/api/session', { credentials: 'same-origin' });
             const data = await res.json();
             if (!data.role || data.role !== 'admin') location.href = '/';
             loadUsers();

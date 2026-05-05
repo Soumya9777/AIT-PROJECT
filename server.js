@@ -20,7 +20,12 @@ app.use(session({
     secret: 'attendance_secret_key_123',
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false }
+    cookie: { 
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    },
+    proxy: true // Trust Render's reverse proxy
 }));
 
 const requireAuth = (req, res, next) => {

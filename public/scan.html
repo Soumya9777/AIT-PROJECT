@@ -60,6 +60,11 @@
             // Start continuous face detection
             startFaceDetection();
 
+            // Check session
+            const sessionRes = await fetch('/api/session', { credentials: 'same-origin' });
+            const sessionData = await sessionRes.json();
+            if (!sessionData.role || sessionData.role !== 'student') location.href = '/';
+
             // Start QR scanner
             const html5Qrcode = new Html5Qrcode("qr-reader");
             html5Qrcode.start(
@@ -139,7 +144,8 @@
                     sessionId: scannedSessionId,
                     token: scannedToken,
                     faceDescriptor: faceDescriptor
-                })
+                }),
+                credentials: 'same-origin'
             });
             
             const msgEl = document.getElementById('attendanceMsg');

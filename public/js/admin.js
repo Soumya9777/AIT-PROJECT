@@ -12,7 +12,7 @@ function showTab(tabId) {
 
 // Logout
 function logout() {
-    fetch('/api/logout').then(() => location.href = '/');
+    fetch('/api/logout', { credentials: 'same-origin' }).then(() => location.href = '/');
 }
 
 // Add User
@@ -28,7 +28,8 @@ document.getElementById('addUserForm').addEventListener('submit', async (e) => {
     const res = await fetch('/api/users', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(data)
+        body: JSON.stringify(data),
+        credentials: 'same-origin'
     });
     
     const msgEl = document.getElementById('userMsg');
@@ -49,7 +50,8 @@ document.getElementById('addSubjectForm').addEventListener('submit', async (e) =
     const res = await fetch('/api/subjects', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({name: subjectName.value})
+        body: JSON.stringify({name: subjectName.value}),
+        credentials: 'same-origin'
     });
     
     const msgEl = document.getElementById('subjectMsg');
@@ -66,7 +68,7 @@ document.getElementById('addSubjectForm').addEventListener('submit', async (e) =
 });
 
 async function loadSubjects() {
-    const res = await fetch('/api/subjects');
+    const res = await fetch('/api/subjects', { credentials: 'same-origin' });
     const subjects = await res.json();
     const list = document.getElementById('subjectsList');
     list.innerHTML = '<h4>Available Subjects</h4>' + 
@@ -75,9 +77,10 @@ async function loadSubjects() {
 
 // Add Face
 let faceDescriptor = null;
+let detectionInterval = null;
 
 async function loadUsersForFace() {
-    const res = await fetch('/api/users/without-faces');
+    const res = await fetch('/api/users/without-faces', { credentials: 'same-origin' });
     const users = await res.json();
     const select = document.getElementById('faceUserId');
     select.innerHTML = users.map(u => `<option value="${u.id}">${u.name} (${u.role})</option>`).join('');
@@ -94,23 +97,50 @@ async function loadUsersForFace() {
     video.srcObject = stream;
 }
 
-async function captureFace() {
+function startFaceDetection() {
     const video = document.getElementById('faceVideo');
     const canvas = document.getElementById('faceCanvas');
-    canvas.width = video.width;
-    canvas.height = video.height;
-    canvas.getContext('2d').drawImage(video, 0, 0);
+    const captureBtn = document.getElementById('captureBtn');
+    const faceStatus = document.getElementById('faceStatus');
     
-    const detection = await faceapi.detectSingleFace(canvas, new faceapi.TinyFaceDetectorOptions())
-        .withFaceLandmarks()
-        .withFaceDescriptor();
+    // Reduce video resolution for faster processing
+    video.width = 160;
+    video.height = 120;
+    canvas.width = 160;
+    canvas.height = 120;
     
-    if (detection) {
-        faceDescriptor = Array.from(detection.descriptor);
-        alert('Face captured!');
-    } else {
-        alert('No face detected. Try again.');
+    detectionInterval = setInterval(async () => {
+        if (video.readyState !== 4) return;
+        
+        canvas.getContext('2d').drawImage(video, 0, 0, 160, 120);
+        
+        // Use faster detection with reduced options
+        const detection = await faceapi.detectSingleFace(canvas, 
+            new faceapi.TinyFaceDetectorOptions({ inputSize: 160 }))
+            .withFaceLandmarks()
+            .withFaceDescriptor();
+        
+        if (detection) {
+            faceDescriptor = Array.from(detection.descriptor);
+            captureBtn.style.display = 'inline-block';
+            captureBtn.textContent = 'Face Detected! Click to Capture';
+            faceStatus.textContent = 'Face detected!';
+            faceStatus.className = 'text-success';
+        } else {
+            faceDescriptor = null;
+            captureBtn.style.display = 'none';
+            faceStatus.textContent = 'Position your face in front of the camera...';
+            faceStatus.className = '';
+        }
+    }, 300); // Check every 300ms for faster response
+}
+
+function captureFace() {
+    if (!faceDescriptor) {
+        alert('No face detected. Position your face in the camera.');
+        return;
     }
+    alert('Face captured successfully!');
 }
 
 document.getElementById('addFaceForm').addEventListener('submit', async (e) => {
@@ -123,7 +153,8 @@ document.getElementById('addFaceForm').addEventListener('submit', async (e) => {
         body: JSON.stringify({
             userId: faceUserId.value,
             descriptor: faceDescriptor
-        })
+        }),
+        credentials: 'same-origin'
     });
     
     const msgEl = document.getElementById('faceMsg');
@@ -140,13 +171,13 @@ document.getElementById('addFaceForm').addEventListener('submit', async (e) => {
 
 // Check auth
 (async () => {
-    const res = await fetch('/api/session');
+    const res = await fetch('/api/session', { credentials: 'same-origin' });
     const data = await res.json();
     if (!data.role || data.role !== 'admin') location.href = '/';
 })();
 
 async function loadUsers() {
-    const res = await fetch('/api/users');
+    const res = await fetch('/api/users', { credentials: 'same-origin' });
     const users = await res.json();
     const list = document.getElementById('usersList');
     
@@ -171,7 +202,8 @@ async function resetPassword(userId) {
     const res = await fetch('/api/users/reset-password', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({userId, newTempPassword})
+        body: JSON.stringify({userId, newTempPassword}),
+        credentials: 'same-origin'
     });
     
     if (res.ok) {
@@ -186,7 +218,8 @@ async function deleteUser(userId, userName) {
     if (!confirm(`Delete user "${userName}"? This cannot be undone.`)) return;
     
     const res = await fetch(`/api/users/${userId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        credentials: 'same-origin'
     });
     
     if (res.ok) {

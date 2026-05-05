@@ -35,7 +35,7 @@
 
     <script>
         async function loadSubjects() {
-            const res = await fetch('/api/subjects');
+            const res = await fetch('/api/subjects', { credentials: 'same-origin' });
             const subjects = await res.json();
             document.getElementById('subjectsList').innerHTML = 
                 subjects.map(s => `<div class="card" style="padding:10px;margin:5px 0">${s.name}</div>`).join('');
@@ -46,7 +46,8 @@
             const res = await fetch('/api/subjects', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({name: subjectName.value})
+                body: JSON.stringify({name: subjectName.value}),
+                credentials: 'same-origin'
             });
             
             const msgEl = document.getElementById('subjectMsg');
@@ -63,7 +64,7 @@
         });
 
         (async () => {
-            const res = await fetch('/api/session');
+            const res = await fetch('/api/session', { credentials: 'same-origin' });
             const data = await res.json();
             if (!data.role || data.role !== 'admin') location.href = '/';
             loadSubjects();

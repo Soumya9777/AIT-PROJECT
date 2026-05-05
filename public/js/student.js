@@ -1,6 +1,6 @@
 // Check auth
 (async () => {
-    const res = await fetch('/api/session');
+    const res = await fetch('/api/session', { credentials: 'same-origin' });
     const data = await res.json();
     if (!data.role || data.role !== 'student') location.href = '/';
     loadAttendancePercentage();
@@ -8,7 +8,7 @@
 })();
 
 async function loadAttendancePercentage() {
-    const res = await fetch('/api/attendance/percentage');
+    const res = await fetch('/api/attendance/percentage', { credentials: 'same-origin' });
     const data = await res.json();
     
     document.getElementById('overallPercentage').textContent = data.overall.percentage + '%';
@@ -30,7 +30,7 @@ async function loadAttendancePercentage() {
 }
 
 async function loadAttendance() {
-    const res = await fetch('/api/attendance/reports');
+    const res = await fetch('/api/attendance/reports', { credentials: 'same-origin' });
     const records = await res.json();
     const container = document.getElementById('attendanceList');
     
@@ -44,6 +44,31 @@ async function loadAttendance() {
         '<p>No attendance records yet.</p>';
 }
 
+// Check if face data is registered on page load
+(async () => {
+    try {
+        const res = await fetch('/api/faces', { credentials: 'same-origin' });
+        const faces = await res.json();
+        const currentUserRes = await fetch('/api/session', { credentials: 'same-origin' });
+        const currentUser = await currentUserRes.json();
+        const hasFaceData = faces.some(f => f.userId === currentUser.id);
+        
+        if (!hasFaceData) {
+            const scanLink = document.querySelector('a[href="scan.html"]');
+            if (scanLink) {
+                scanLink.style.pointerEvents = 'none';
+                scanLink.style.opacity = '0.5';
+                scanLink.insertAdjacentHTML('afterend', 
+                    '<div style="color: #dc3545; margin-top: 10px; padding: 10px; background: #f8d7da; border-radius: 8px;">' +
+                    '⚠️ Face data not registered! Contact admin to register your face before marking attendance.' +
+                    '</div>');
+            }
+        }
+    } catch (err) {
+        console.error('Error checking face data:', err);
+    }
+})();
+
 function logout() {
-    fetch('/api/logout').then(() => location.href = '/');
+    fetch('/api/logout', { credentials: 'same-origin' }).then(() => location.href = '/');
 }
