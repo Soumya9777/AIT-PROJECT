@@ -3,33 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Attendance System | Login</title>
+    <title>Smart Attendance System | NIST</title>
     <link rel="stylesheet" href="css/styles.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 </head>
-<body style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-    <div style="width: 100%; max-width: 440px; padding: 20px;">
-        <!-- Logo/Brand -->
-        <div style="text-align: center; margin-bottom: 32px;">
-            <div style="width: 80px; height: 80px; background: white; border-radius: 20px; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 32px rgba(0,0,0,0.2); font-size: 32px;">
-                🎓
-            </div>
-            <h1 style="color: white; font-size: 32px; font-weight: 800; margin: 0; letter-spacing: -1px;">Smart Attendance</h1>
-            <p style="color: rgba(255,255,255,0.9); font-size: 16px; margin-top: 8px;">Sign in to continue</p>
-        </div>
-
+<body>
+    <div class="login-container">
         <!-- Login Form -->
-        <div class="auth-container" id="loginSection">
-            <div class="auth-header">Welcome Back</div>
-            <form id="loginForm" style="padding: 24px 24px 32px;">
-                <div class="form-group" style="margin: 0 0 16px 0;">
+        <div class="card" id="loginSection">
+            <div style="text-align: center; margin-bottom: 32px;">
+                <img src="images/college-logo.jpg" alt="College Logo" style="height: 100px; margin-bottom: 16px;">
+                <h1 style="color: var(--dark); font-size: 32px; font-weight: 800; margin: 0;">Smart Attendance</h1>
+                <p style="color: var(--secondary); font-size: 16px; margin-top: 8px;">NIST - Sign in to continue</p>
+            </div>
+            
+            <form id="loginForm">
+                <div class="form-group">
                     <label for="username">Username</label>
-                    <input type="text" id="username" placeholder="Enter your username" required autocomplete="off" style="margin-top: 8px;">
+                    <input type="text" id="username" placeholder="Enter your username" required autocomplete="off">
                 </div>
-                <div class="form-group" style="margin: 0 0 24px 0;">
+                <div class="form-group">
                     <label for="password">Password</label>
-                    <input type="password" id="password" placeholder="Enter your password" required style="margin-top: 8px;">
+                    <input type="password" id="password" placeholder="Enter your password" required>
                 </div>
                 <button type="submit" class="btn-primary" style="width: 100%; padding: 16px; font-size: 16px;">Sign In</button>
                 <div id="loginError" class="text-danger hidden" style="margin-top: 16px;"></div>
@@ -37,26 +32,28 @@
         </div>
 
         <!-- Change Password Form -->
-        <div class="auth-container hidden" id="changePasswordSection">
-            <div class="auth-header">Set New Password</div>
-            <div style="padding: 24px 24px 32px;">
-                <p style="font-size: 14px; margin-bottom: 20px; color: var(--dark); text-align: center;">For security, please change your temporary password.</p>
-                <form id="changePasswordForm">
-                    <input type="hidden" id="cpUsername">
-                    <input type="hidden" id="cpTempPassword">
-                    
-                    <div class="form-group" style="margin: 0 0 16px 0;">
-                        <label for="newPassword">New Password</label>
-                        <input type="password" id="newPassword" placeholder="Enter new password" required style="margin-top: 8px;">
-                    </div>
-                    <div class="form-group" style="margin: 0 0 24px 0;">
-                        <label for="confirmPassword">Confirm Password</label>
-                        <input type="password" id="confirmPassword" placeholder="Confirm new password" required style="margin-top: 8px;">
-                    </div>
-                    <button type="submit" class="btn-primary" style="width: 100%; padding: 16px; font-size: 16px;">Update Password</button>
-                    <div id="cpError" class="text-danger hidden" style="margin-top: 16px;"></div>
-                </form>
+        <div class="card hidden" id="changePasswordSection">
+            <div style="text-align: center; margin-bottom: 24px;">
+                <img src="images/college-logo.jpg" alt="College Logo" style="height: 60px; margin-bottom: 12px;">
+                <h2>Set New Password</h2>
+                <p style="color: var(--secondary); font-size: 14px;">For security, please change your temporary password.</p>
             </div>
+            
+            <form id="changePasswordForm">
+                <input type="hidden" id="cpUsername">
+                <input type="hidden" id="cpTempPassword">
+                
+                <div class="form-group">
+                    <label for="newPassword">New Password</label>
+                    <input type="password" id="newPassword" placeholder="Enter new password" required>
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <input type="password" id="confirmPassword" placeholder="Confirm new password" required>
+                </div>
+                <button type="submit" class="btn-primary" style="width: 100%; padding: 16px; font-size: 16px;">Update Password</button>
+                <div id="cpError" class="text-danger hidden" style="margin-top: 16px;"></div>
+            </form>
         </div>
     </div>
 

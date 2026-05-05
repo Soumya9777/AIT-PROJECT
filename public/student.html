@@ -10,7 +10,10 @@
 <body>
     <div class="container">
         <header class="header">
-            <h1>Student Portal</h1>
+            <h1>
+                <img src="images/college-logo.jpg" alt="Logo" class="header-logo">
+                Student Portal
+            </h1>
             <button onclick="logout()" class="btn-secondary">Logout</button>
         </header>
 
@@ -22,13 +25,18 @@
             </a>
         </div>
 
-        <div class="card" style="margin-top: 20px;">
-            <h3>Attendance Percentage</h3>
-            <div id="attendancePercentage" style="text-align: center; padding: 20px;">
-                <div id="overallPercentage" style="font-size: 48px; font-weight: 700; color: #667eea;"></div>
-                <div id="overallDetails" style="margin-top: 10px; color: #666;"></div>
+        <div id="attendancePercentage">
+            <!-- Overall Percentage Card -->
+            <div class="percentage-display">
+                <div id="overallPercentage" class="percentage-number">0%</div>
+                <div id="overallDetails" class="percentage-label">Loading...</div>
             </div>
-            <div id="subjectPercentages" style="margin-top: 20px;"></div>
+            
+            <!-- Subject-wise Percentages -->
+            <div class="card" style="margin-top: 20px;">
+                <h3>Attendance by Subject</h3>
+                <div id="subjectPercentages"></div>
+            </div>
         </div>
 
         <div class="card" style="margin-top: 20px;">
