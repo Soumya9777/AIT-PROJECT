@@ -9,6 +9,14 @@
         return;
     }
     
+    // Update welcome message
+    if (data.name) {
+        document.getElementById('welcomeHeader').innerHTML = `
+            <img src="images/college-logo.jpg" alt="Logo" class="header-logo">
+            Welcome back, ${data.name}!
+        `;
+    }
+    
     loadAttendancePercentage();
     loadAttendance();
 })();

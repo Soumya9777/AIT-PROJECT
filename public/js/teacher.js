@@ -1,11 +1,18 @@
 let currentSessionId = null;
 let qrInterval = null;
+let currentUser = null;
 
 // Load data on page load
 (async () => {
     const res = await fetch('/api/session', { credentials: 'same-origin' });
-    const data = await res.json();
-    if (!data.role || data.role !== 'teacher') location.href = '/';
+    currentUser = await res.json();
+    if (!currentUser.role || currentUser.role !== 'teacher') location.href = '/';
+    
+    // Update header with user name
+    document.querySelector('.header h1').innerHTML = `
+        <img src="images/college-logo.jpg" alt="Logo" class="header-logo">
+        Welcome, ${currentUser.name}
+    `;
     
     loadSubjects();
     loadActiveSessions();
@@ -21,7 +28,7 @@ async function loadStats() {
     // Load active sessions count
     const sessionsRes = await fetch('/api/attendance/sessions/active', { credentials: 'same-origin' });
     const sessions = await sessionsRes.json();
-    const mySessions = sessions.filter(s => s.teacher_name === (await (await fetch('/api/session', { credentials: 'same-origin' })).json()).name);
+    const mySessions = sessions.filter(s => s.teacher_name === currentUser.name);
     document.getElementById('activeSessionCount').textContent = mySessions.length;
     
     // Load student count
@@ -41,6 +48,11 @@ async function loadSubjects() {
 // Create session
 document.getElementById('sessionForm').addEventListener('submit', async (e) => {
     e.preventDefault();
+    
+    const btn = e.target.querySelector('button[type="submit"]');
+    btn.classList.add('loading');
+    btn.disabled = true;
+    
     const data = {
         sectionName: sectionName.value,
         subject: subjectSelect.value,
@@ -55,6 +67,9 @@ document.getElementById('sessionForm').addEventListener('submit', async (e) => {
         body: JSON.stringify(data),
         credentials: 'same-origin'
     });
+    
+    btn.classList.remove('loading');
+    btn.disabled = false;
     
     const result = await res.json();
     if (res.ok) {
@@ -125,11 +140,9 @@ async function stopSession() {
 async function loadActiveSessions() {
     const res = await fetch('/api/attendance/sessions/active', { credentials: 'same-origin' });
     const sessions = await res.json();
-    const sessionRes = await fetch('/api/session', { credentials: 'same-origin' });
-    const userData = await sessionRes.json();
     const container = document.getElementById('activeSessions');
     
-    const mySessions = sessions.filter(s => s.teacher_name === userData.name);
+    const mySessions = sessions.filter(s => s.teacher_name === currentUser.name);
     
     if (mySessions.length === 0) {
         container.innerHTML = `
