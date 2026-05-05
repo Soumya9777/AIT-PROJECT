@@ -111,10 +111,16 @@
                 filtered = filtered.filter(r => r.student_name.toLowerCase().includes(student));
             }
             if (dateFrom) {
-                filtered = filtered.filter(r => new Date(r.timestamp) >= new Date(dateFrom));
+                filtered = filtered.filter(r => {
+                    const recordDate = new Date(r.timestamp).toISOString().split('T')[0];
+                    return recordDate >= dateFrom;
+                });
             }
             if (dateTo) {
-                filtered = filtered.filter(r => new Date(r.timestamp) <= new Date(dateTo + 'T23:59:59'));
+                filtered = filtered.filter(r => {
+                    const recordDate = new Date(r.timestamp).toISOString().split('T')[0];
+                    return recordDate <= dateTo;
+                });
             }
 
             const container = document.getElementById('reportTable');
@@ -129,7 +135,7 @@
                 return;
             }
 
-            container.innerHTML = `
+                container.innerHTML = `
                 <table style="width: 100%; border-collapse: collapse;">
                     <thead>
                         <tr style="background: var(--gray-50); text-align: left;">
@@ -137,19 +143,23 @@
                             <th style="padding: 12px; font-size: 13px; text-transform: uppercase; color: var(--gray-500);">Section</th>
                             <th style="padding: 12px; font-size: 13px; text-transform: uppercase; color: var(--gray-500);">Topic</th>
                             <th style="padding: 12px; font-size: 13px; text-transform: uppercase; color: var(--gray-500);">Subject</th>
+                            <th style="padding: 12px; font-size: 13px; text-transform: uppercase; color: var(--gray-500);">Date</th>
                             <th style="padding: 12px; font-size: 13px; text-transform: uppercase; color: var(--gray-500);">Time</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${filtered.map(r => `
+                        ${filtered.map(r => {
+                            const date = new Date(r.timestamp);
+                            return `
                             <tr style="border-bottom: 1px solid var(--gray-100);">
                                 <td style="padding: 12px; font-weight: 500;">${r.student_name}</td>
                                 <td style="padding: 12px; color: var(--gray-600);">${r.section_name}</td>
                                 <td style="padding: 12px; color: var(--gray-600);">${r.topic}</td>
                                 <td style="padding: 12px;"><span class="badge badge-success">${r.subject || 'N/A'}</span></td>
-                                <td style="padding: 12px; color: var(--gray-400); font-size: 13px;">${new Date(r.timestamp).toLocaleString()}</td>
+                                <td style="padding: 12px; color: var(--gray-600); font-size: 13px;">${date.toLocaleDateString()}</td>
+                                <td style="padding: 12px; color: var(--gray-400); font-size: 13px;">${date.toLocaleTimeString()}</td>
                             </tr>
-                        `).join('')}
+                        `}).join('')}
                     </tbody>
                 </table>
             `;

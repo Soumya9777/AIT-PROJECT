@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Sections | Admin</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>
+                <img src="images/college-logo.jpg" alt="Logo" class="header-logo">
+                Manage Sections
+            </h1>
+            <a href="admin.html" class="btn-secondary">Back</a>
+        </header>
+
+        <!-- Add Section -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-header-icon">➕</div>
+                <h3>Add New Section</h3>
+            </div>
+            <form id="addSectionForm">
+                <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 16px; align-items: end;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Section Name</label>
+                        <input type="text" id="sectionName" placeholder="e.g., CSE-A" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Description (Optional)</label>
+                        <input type="text" id="sectionDesc" placeholder="e.g., Computer Science Section A">
+                    </div>
+                    <button type="submit" class="btn-primary" style="height: fit-content;">Add</button>
+                </div>
+            </form>
+            <div id="sectionMsg" style="margin-top: 16px;"></div>
+        </div>
+
+        <!-- Sections List -->
+        <div class="card" style="margin-top: 24px;">
+            <div class="card-header">
+                <div class="card-header-icon">📚</div>
+                <h3>All Sections</h3>
+            </div>
+            <div id="sectionsList"></div>
+        </div>
+    </div>
+
+    <script src="js/toast.js"></script>
+    <script>
+        (async () => {
+            const res = await fetch('/api/session', { credentials: 'same-origin' });
+            const data = await res.json();
+            if (!data.role || data.role !== 'admin') location.href = '/';
+            loadSections();
+        })();
+
+        async function loadSections() {
+            const res = await fetch('/api/sections', { credentials: 'same-origin' });
+            const sections = await res.json();
+            const container = document.getElementById('sectionsList');
+            
+            if (sections.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: var(--gray-400);">
+                        <div style="font-size: 48px; margin-bottom: 12px;">📭</div>
+                        <p>No sections added yet</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = sections.map(s => `
+                <div class="list-item">
+                    <div>
+                        <strong style="font-size: 16px;">${s.name}</strong><br>
+                        ${s.description ? `<span style="color: var(--gray-500); font-size: 14px;">${s.description}</span>` : ''}
+                    </div>
+                    <button onclick="deleteSection(${s.id}, '${s.name}')" class="btn-danger" style="padding: 8px 16px; font-size: 12px;">
+                        Delete
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        document.getElementById('addSectionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const data = {
+                name: sectionName.value,
+                description: sectionDesc.value
+            };
+
+            const res = await fetch('/api/sections', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data),
+                credentials: 'same-origin'
+            });
+
+            const msgEl = document.getElementById('sectionMsg');
+            
+            if (res.ok) {
+                msgEl.innerHTML = '<div class="text-success">✓ Section added successfully!</div>';
+                e.target.reset();
+                loadSections();
+            } else {
+                const result = await res.json();
+                msgEl.innerHTML = `<div class="text-danger">${result.error || 'Error adding section'}</div>`;
+            }
+        });
+
+        async function deleteSection(id, name) {
+            if (!confirm(`Delete section "${name}"? This cannot be undone.`)) return;
+            
+            const res = await fetch(`/api/sections/${id}`, {
+                method: 'DELETE',
+                credentials: 'same-origin'
+            });
+
+            if (res.ok) {
+                showToast('Section deleted!', 'success');
+                loadSections();
+            } else {
+                showToast('Error deleting section', 'error');
+            }
+        }
+
+        function logout() {
+            fetch('/api/logout', { credentials: 'same-origin' }).then(() => location.href = '/');
+        }
+    </script>
+</body>
+</html>

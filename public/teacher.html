@@ -6,7 +6,7 @@
     <title>Teacher Portal | Smart Attendance</title>
     <link rel="stylesheet" href="css/styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="icon" href="images/college-logo.jpg" type="image/jpg">
+    <link rel="icon" href="images/college-logo.jpg" type="image/jpg">
     <script src="js/toast.js"></script>
 </head>
 <body>
@@ -56,12 +56,16 @@
             <form id="sessionForm">
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
                     <div class="form-group">
-                        <label>Section Name</label>
-                        <input type="text" id="sectionName" placeholder="e.g., CSE-A" required>
+                        <label>Section</label>
+                        <select id="sectionSelect" required>
+                            <option value="">Select Section</option>
+                        </select>
                     </div>
                     <div class="form-group">
                         <label>Subject</label>
-                        <select id="subjectSelect" required></select>
+                        <select id="subjectSelect" required>
+                            <option value="">Select Subject</option>
+                        </select>
                     </div>
                 </div>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">

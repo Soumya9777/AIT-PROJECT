@@ -255,6 +255,30 @@ app.post('/api/subjects', requireAuth, requireRole('admin'), (req, res) => {
     });
 });
 
+// ============ SECTIONS API ============
+app.get('/api/sections', requireAuth, (req, res) => {
+    db.all("SELECT * FROM sections ORDER BY name", (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+app.post('/api/sections', requireAuth, requireRole('admin'), (req, res) => {
+    const { name, description } = req.body;
+    if (!name) return res.status(400).json({ error: 'Section name required' });
+    db.run("INSERT INTO sections (name, description) VALUES (?, ?)", [name, description], function(err) {
+        if (err) return res.status(400).json({ error: 'Section already exists' });
+        res.json({ id: this.lastID, message: 'Section added' });
+    });
+});
+
+app.delete('/api/sections/:id', requireAuth, requireRole('admin'), (req, res) => {
+    db.run("DELETE FROM sections WHERE id = ?", [req.params.id], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: 'Section deleted' });
+    });
+});
+
 app.get('/api/attendance/qr/:sessionId', requireAuth, requireRole('teacher'), (req, res) => {
     const { sessionId } = req.params;
     db.get("SELECT id, session_token, topic, status FROM attendance_sessions WHERE id = ? AND faculty_id = ? AND status = 'active'",

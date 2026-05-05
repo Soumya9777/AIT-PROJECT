@@ -9,12 +9,13 @@ let currentUser = null;
     if (!currentUser.role || currentUser.role !== 'teacher') location.href = '/';
     
     // Update header with user name
-    document.querySelector('.header h1').innerHTML = `
+    document.querySelector('#welcomeHeader').innerHTML = `
         <img src="images/college-logo.jpg" alt="Logo" class="header-logo">
         Welcome, ${currentUser.name}
     `;
     
     loadSubjects();
+    loadSections();
     loadActiveSessions();
     loadStats();
 })();
@@ -42,7 +43,16 @@ async function loadSubjects() {
     const res = await fetch('/api/subjects', { credentials: 'same-origin' });
     const subjects = await res.json();
     const select = document.getElementById('subjectSelect');
-    select.innerHTML = subjects.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+    select.innerHTML = '<option value="">Select Subject</option>' + 
+        subjects.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+}
+
+async function loadSections() {
+    const res = await fetch('/api/sections', { credentials: 'same-origin' });
+    const sections = await res.json();
+    const select = document.getElementById('sectionSelect');
+    select.innerHTML = '<option value="">Select Section</option>' + 
+        sections.map(s => `<option value="${s.name}">${s.name} ${s.description ? '(' + s.description + ')' : ''}</option>`).join('');
 }
 
 // Create session
@@ -54,7 +64,7 @@ document.getElementById('sessionForm').addEventListener('submit', async (e) => {
     btn.disabled = true;
     
     const data = {
-        sectionName: sectionName.value,
+        sectionName: sectionSelect.value,
         subject: subjectSelect.value,
         topic: topic.value,
         startTime: startTime.value,
