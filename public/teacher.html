@@ -11,11 +11,14 @@
 <body>
     <div class="container">
         <header class="header">
-            <h1>
+            <h1 id="welcomeHeader">
                 <img src="images/college-logo.jpg" alt="Logo" class="header-logo">
                 Teacher Portal
             </h1>
-            <button onclick="logout()" class="btn-secondary">Logout</button>
+            <div style="display: flex; gap: 12px; align-items: center;">
+                <a href="profile.html" class="btn-secondary" style="text-decoration: none;">👤 Profile</a>
+                <button onclick="logout()" class="btn-secondary">Logout</button>
+            </div>
         </header>
 
         <!-- Stats Cards -->

@@ -15,7 +15,10 @@
                 <img src="images/college-logo.jpg" alt="Logo" class="header-logo">
                 Admin Portal
             </h1>
-            <button onclick="logout()" class="btn-secondary">Logout</button>
+            <div style="display: flex; gap: 12px; align-items: center;">
+                <a href="profile.html" class="btn-secondary" style="text-decoration: none;">👤 Profile</a>
+                <button onclick="logout()" class="btn-secondary">Logout</button>
+            </div>
         </header>
 
         <div style="max-width: 700px;">
@@ -48,6 +51,14 @@
                 <div class="option-content">
                     <h3>Manage Users</h3>
                     <p>Reset passwords, delete users, and manage accounts</p>
+                </div>
+            </div>
+
+            <div class="option-card" onclick="location.href='admin-bulk-upload.html'">
+                <div class="option-icon">📥</div>
+                <div class="option-content">
+                    <h3>Bulk Upload</h3>
+                    <p>Upload multiple students at once via CSV file</p>
                 </div>
             </div>
         </div>

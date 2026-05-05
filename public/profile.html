@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile | Smart Attendance</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>
+                <img src="images/college-logo.jpg" alt="Logo" class="header-logo">
+                My Profile
+            </h1>
+            <button onclick="goBack()" class="btn-secondary">Back</button>
+        </header>
+
+        <div class="card">
+            <div class="card-header">
+                <div class="card-header-icon">👤</div>
+                <h3>Profile Information</h3>
+            </div>
+            <div id="profileInfo" style="padding: 20px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                    <div>
+                        <div style="font-size: 13px; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Username</div>
+                        <div id="infoUsername" style="font-size: 16px; font-weight: 600;">Loading...</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 13px; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Full Name</div>
+                        <div id="infoName" style="font-size: 16px; font-weight: 600;">Loading...</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 13px; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Role</div>
+                        <div id="infoRole" style="font-size: 16px; font-weight: 600;">Loading...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 24px;">
+            <div class="card-header">
+                <div class="card-header-icon">🔒</div>
+                <h3>Change Password</h3>
+            </div>
+            <form id="changePasswordForm" style="padding: 20px;">
+                <div class="form-group">
+                    <label>Current Password</label>
+                    <input type="password" id="currentPassword" required>
+                </div>
+                <div class="form-group">
+                    <label>New Password</label>
+                    <input type="password" id="newPassword" required>
+                </div>
+                <div class="form-group">
+                    <label>Confirm New Password</label>
+                    <input type="password" id="confirmPassword" required>
+                </div>
+                <button type="submit" class="btn-primary" style="width: 100%;">🔒 Change Password</button>
+                <div id="passwordMsg" style="margin-top: 16px;"></div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentUserData = null;
+
+        (async () => {
+            const res = await fetch('/api/session', { credentials: 'same-origin' });
+            currentUserData = await res.json();
+            
+            if (!currentUserData.id) {
+                location.href = '/';
+                return;
+            }
+
+            // Fill profile info
+            document.getElementById('infoUsername').textContent = currentUserData.username || 'N/A';
+            document.getElementById('infoName').textContent = currentUserData.name || 'N/A';
+            document.getElementById('infoRole').textContent = currentUserData.role || 'N/A';
+        })();
+
+        document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const current = currentPassword.value;
+            const newPass = newPassword.value;
+            const confirm = confirmPassword.value;
+            
+            if (newPass !== confirm) {
+                document.getElementById('passwordMsg').innerHTML = '<div class="text-danger">Passwords do not match</div>';
+                return;
+            }
+
+            if (newPass.length < 6) {
+                document.getElementById('passwordMsg').innerHTML = '<div class="text-danger">Password must be at least 6 characters</div>';
+                return;
+            }
+
+            const btn = e.target.querySelector('button');
+            btn.classList.add('loading');
+            btn.disabled = true;
+
+            // First verify current password
+            const verifyRes = await fetch('/api/login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    username: currentUserData.username,
+                    password: current
+                }),
+                credentials: 'same-origin'
+            });
+
+            if (!verifyRes.ok) {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+                document.getElementById('passwordMsg').innerHTML = '<div class="text-danger">Current password is incorrect</div>';
+                return;
+            }
+
+            // Change password
+            const changeRes = await fetch('/api/change-password', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    username: currentUserData.username,
+                    temporaryPassword: current,
+                    newPassword: newPass
+                }),
+                credentials: 'same-origin'
+            });
+
+            btn.classList.remove('loading');
+            btn.disabled = false;
+
+            const msgEl = document.getElementById('passwordMsg');
+            
+            if (changeRes.ok) {
+                msgEl.innerHTML = '<div class="text-success">✓ Password changed successfully!</div>';
+                e.target.reset();
+            } else {
+                const data = await changeRes.json();
+                msgEl.innerHTML = `<div class="text-danger">${data.error || 'Failed to change password'}</div>`;
+            }
+        });
+
+        function goBack() {
+            if (currentUserData) {
+                location.href = currentUserData.role + '.html';
+            } else {
+                location.href = '/';
+            }
+        }
+
+        function logout() {
+            fetch('/api/logout', { credentials: 'same-origin' }).then(() => location.href = '/');
+        }
+    </script>
+</body>
+</html>
