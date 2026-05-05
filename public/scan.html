@@ -25,8 +25,8 @@
             <h3>Step 2: Verify Face</h3>
             <video id="faceVideo" width="320" height="240" autoplay style="display: block; margin: 0 auto;"></video>
             <canvas id="faceCanvas" style="display: none;"></canvas>
-            <button onclick="captureFace()" class="btn-primary" style="margin-top: 10px; width: 100%;">Capture Face</button>
-            <div id="faceStatus" style="margin-top: 10px;"></div>
+            <button id="captureBtn" onclick="captureFace()" class="btn-primary" style="margin-top: 10px; width: 100%; display: none;">Face Detected! Click to Capture</button>
+            <div id="faceStatus" style="margin-top: 10px; text-align: center; color: #666;">Position your face in front of the camera...</div>
         </div>
 
         <div id="markAttendance" class="card hidden" style="margin-top: 20px; text-align: center;">
@@ -39,6 +39,7 @@
         let scannedSessionId = null;
         let scannedToken = null;
         let faceDescriptor = null;
+        let faceDetectionInterval = null;
 
         // Load face-api models
         (async () => {
@@ -53,6 +54,9 @@
             const stream = await navigator.mediaDevices.getUserMedia({video: {}});
             video.srcObject = stream;
 
+            // Start continuous face detection
+            startFaceDetection();
+
             // Start QR scanner
             const html5Qrcode = new Html5Qrcode("qr-reader");
             html5Qrcode.start(
@@ -65,33 +69,56 @@
                     document.getElementById('qrResult').innerHTML = `QR Scanned! Session ID: ${scannedSessionId}`;
                     document.getElementById('qrResult').classList.remove('hidden');
                     html5Qrcode.stop();
+                    checkReadyToMark();
                 },
                 (error) => {}
             ).catch(err => console.error(err));
         })();
 
-        async function captureFace() {
+        function startFaceDetection() {
             const video = document.getElementById('faceVideo');
             const canvas = document.getElementById('faceCanvas');
-            canvas.width = video.width;
-            canvas.height = video.height;
-            canvas.getContext('2d').drawImage(video, 0, 0);
+            const captureBtn = document.getElementById('captureBtn');
+            const faceStatus = document.getElementById('faceStatus');
             
-            const detection = await faceapi.detectSingleFace(canvas, new faceapi.TinyFaceDetectorOptions())
-                .withFaceLandmarks()
-                .withFaceDescriptor();
-            
-            if (detection) {
-                faceDescriptor = Array.from(detection.descriptor);
-                document.getElementById('faceStatus').innerHTML = 'Face captured successfully!';
-                document.getElementById('faceStatus').className = 'text-success';
+            faceDetectionInterval = setInterval(async () => {
+                if (video.readyState !== 4) return;
                 
-                if (scannedSessionId && scannedToken) {
-                    document.getElementById('markAttendance').classList.remove('hidden');
+                canvas.width = video.width;
+                canvas.height = video.height;
+                canvas.getContext('2d').drawImage(video, 0, 0);
+                
+                const detection = await faceapi.detectSingleFace(canvas, new faceapi.TinyFaceDetectorOptions())
+                    .withFaceLandmarks()
+                    .withFaceDescriptor();
+                
+                if (detection) {
+                    faceDescriptor = Array.from(detection.descriptor);
+                    captureBtn.style.display = 'block';
+                    captureBtn.textContent = 'Face Detected! Click to Capture';
+                    faceStatus.textContent = 'Face detected! Click the button below to capture.';
+                    faceStatus.className = 'text-success';
+                } else {
+                    faceDescriptor = null;
+                    captureBtn.style.display = 'none';
+                    faceStatus.textContent = 'Position your face in front of the camera...';
+                    faceStatus.className = '';
                 }
-            } else {
-                document.getElementById('faceStatus').innerHTML = 'No face detected. Try again.';
-                document.getElementById('faceStatus').className = 'text-danger';
+            }, 500);
+        }
+
+        function captureFace() {
+            if (!faceDescriptor) {
+                alert('No face detected. Position your face in the camera.');
+                return;
+            }
+            document.getElementById('faceStatus').innerHTML = 'Face captured successfully!';
+            checkReadyToMark();
+        }
+
+        function checkReadyToMark() {
+            if (scannedSessionId && scannedToken && faceDescriptor) {
+                document.getElementById('markAttendance').classList.remove('hidden');
             }
         }
 

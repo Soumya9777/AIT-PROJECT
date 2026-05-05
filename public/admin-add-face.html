@@ -24,7 +24,8 @@
                     <label>Capture Face</label><br>
                     <video id="faceVideo" width="320" height="240" autoplay></video>
                     <canvas id="faceCanvas" style="display:none;"></canvas><br>
-                    <button type="button" onclick="captureFace()" class="btn-secondary">Capture Face</button>
+                    <button type="button" id="captureBtn" onclick="captureFace()" class="btn-secondary" style="display:none;">Face Detected! Click to Capture</button>
+                    <p id="faceStatus" style="color:#666;font-size:14px;margin-top:8px;">Position your face in front of the camera...</p>
                 </div>
                 <button type="submit" class="btn-primary">Save Face Data</button>
                 <div id="faceMsg" class="hidden"></div>
@@ -34,6 +35,7 @@
 
     <script>
         let faceDescriptor = null;
+        let detectionInterval = null;
 
         (async () => {
             const res = await fetch('/api/session');
@@ -54,25 +56,44 @@
             const users = await usersRes.json();
             const select = document.getElementById('faceUserId');
             select.innerHTML = users.map(u => `<option value="${u.id}">${u.name} (${u.role})</option>`).join('');
+            
+            // Start continuous face detection
+            startFaceDetection();
         })();
 
-        async function captureFace() {
+        function startFaceDetection() {
             const video = document.getElementById('faceVideo');
             const canvas = document.getElementById('faceCanvas');
-            canvas.width = video.width;
-            canvas.height = video.height;
-            canvas.getContext('2d').drawImage(video, 0, 0);
+            const captureBtn = document.getElementById('captureBtn');
             
-            const detection = await faceapi.detectSingleFace(canvas, new faceapi.TinyFaceDetectorOptions())
-                .withFaceLandmarks()
-                .withFaceDescriptor();
-            
-            if (detection) {
-                faceDescriptor = Array.from(detection.descriptor);
-                alert('Face captured!');
-            } else {
-                alert('No face detected. Try again.');
+            detectionInterval = setInterval(async () => {
+                if (video.readyState !== 4) return;
+                
+                canvas.width = video.width;
+                canvas.height = video.height;
+                canvas.getContext('2d').drawImage(video, 0, 0);
+                
+                const detection = await faceapi.detectSingleFace(canvas, new faceapi.TinyFaceDetectorOptions())
+                    .withFaceLandmarks()
+                    .withFaceDescriptor();
+                
+                if (detection) {
+                    faceDescriptor = Array.from(detection.descriptor);
+                    captureBtn.style.display = 'inline-block';
+                    captureBtn.textContent = 'Face Detected! Click to Capture';
+                } else {
+                    faceDescriptor = null;
+                    captureBtn.style.display = 'none';
+                }
+            }, 500); // Check every 500ms
+        }
+
+        function captureFace() {
+            if (!faceDescriptor) {
+                alert('No face detected. Position your face in the camera.');
+                return;
             }
+            alert('Face captured successfully!');
         }
 
         document.getElementById('addFaceForm').addEventListener('submit', async (e) => {
