@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Users | Admin Portal</title>
     <link rel="stylesheet" href="css/styles-professional.css">
-<link rel="icon" href="images/college-logo.jpg" type="image/jpg">
+    <link rel="icon" href="images/college-logo.jpg" type="image/jpg">
+    <script src="js/face-api.min.js"></script>
     <script src="js/toast.js"></script>
 </head>
 <body>
@@ -32,22 +33,433 @@
         </div>
     </div>
 
+    <!-- Face Capture Modal -->
+    <div id="faceModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Add Face Data</h3>
+                <button onclick="closeFaceModal()" class="btn-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="modalUserName" class="modal-user-name"></p>
+                <div class="face-capture-area">
+                    <video id="faceVideo" autoplay playsinline></video>
+                    <canvas id="faceCanvas" style="display:none;"></canvas>
+                    <p id="faceStatus" class="face-status">Initializing camera...</p>
+                    <div class="face-actions">
+                        <button onclick="captureFace()" id="captureBtn" class="btn-primary" style="display:none;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                                <circle cx="12" cy="13" r="4"/>
+                            </svg>
+                            Capture Face
+                        </button>
+                    </div>
+                </div>
+                <div id="faceMsg" class="hidden"></div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeFaceModal()" class="btn-secondary">Cancel</button>
+                <button onclick="saveFace()" id="saveBtn" class="btn-primary" style="display:none;">Save Face Data</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        .modal-content {
+            background: var(--white);
+            border-radius: var(--radius);
+            width: 90%;
+            max-width: 500px;
+            box-shadow: var(--shadow-xl);
+            overflow: hidden;
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        .btn-close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: var(--gray-100);
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .btn-close:hover {
+            background: var(--gray-200);
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .modal-user-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--gray-600);
+            margin-bottom: 20px;
+        }
+
+        .face-capture-area {
+            text-align: center;
+        }
+
+        #faceVideo {
+            width: 100%;
+            max-width: 400px;
+            border-radius: var(--radius-sm);
+            background: var(--gray-100);
+            border: 2px solid var(--gray-200);
+        }
+
+        .face-status {
+            margin-top: 16px;
+            font-size: 14px;
+            color: var(--gray-500);
+            font-weight: 500;
+        }
+
+        .face-actions {
+            margin-top: 20px;
+        }
+
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .user-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--gray-100);
+            transition: background 0.2s;
+        }
+
+        .user-card:hover {
+            background: var(--gray-50);
+        }
+
+        .user-card:last-child {
+            border-bottom: none;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            font-weight: 700;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .user-avatar.has-face::after {
+            content: '✓';
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            width: 18px;
+            height: 18px;
+            background: var(--success);
+            border-radius: 50%;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--white);
+        }
+
+        .user-details h4 {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 4px;
+        }
+
+        .user-details p {
+            font-size: 13px;
+            color: var(--gray-500);
+        }
+
+        .user-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .btn-face {
+            padding: 8px 14px;
+            border-radius: var(--radius-xs);
+            font-size: 12px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn-face-add {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(30, 58, 138, 0.3);
+        }
+
+        .btn-face-add:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(30, 58, 138, 0.4);
+        }
+
+        .btn-face-update {
+            background: var(--warning);
+            color: white;
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+        }
+
+        .btn-face-update:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+        }
+
+        .btn-delete {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-delete:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+        }
+    </style>
+
     <script>
+        let faceDescriptor = null;
+        let detectionInterval = null;
+        let currentUserId = null;
+        let faceLoaded = false;
+        let faceUsersWithFaces = new Set();
+
         async function loadUsers() {
             const res = await fetch('/api/users', { credentials: 'same-origin' });
             const users = await res.json();
-            document.getElementById('usersList').innerHTML = users.map(u => `
-                <div class="card" style="padding:10px;margin:5px 0; display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <strong>${u.name}</strong> (@${u.username})<br>
-                        <small style="color: #666;">${u.role}</small>
+            
+            const facesRes = await fetch('/api/faces', { credentials: 'same-origin' });
+            const faces = await facesRes.json();
+            faceUsersWithFaces = new Set(faces.map(f => f.user_id));
+            
+            document.getElementById('usersList').innerHTML = users.map(u => {
+                const hasFace = faceUsersWithFaces.has(u.id);
+                const initials = u.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+                return `
+                    <div class="user-card">
+                        <div class="user-info">
+                            <div class="user-avatar ${hasFace ? 'has-face' : ''}">${initials}</div>
+                            <div class="user-details">
+                                <h4>${u.name}</h4>
+                                <p>@${u.username} • ${u.role}</p>
+                            </div>
+                        </div>
+                        <div class="user-actions">
+                            <button onclick="openFaceModal(${u.id}, '${u.name.replace(/'/g, "\\'")}', ${hasFace})" class="btn-face ${hasFace ? 'btn-face-update' : 'btn-face-add'}">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="12" cy="7" r="4"/>
+                                </svg>
+                                ${hasFace ? 'Update Face' : 'Add Face'}
+                            </button>
+                            <button onclick="resetPassword(${u.id})" class="btn-secondary btn-face">Reset PW</button>
+                            <button onclick="deleteUser(${u.id}, '${u.name.replace(/'/g, "\\'")}')" class="btn-face btn-delete">Delete</button>
+                        </div>
                     </div>
-                    <div style="display: flex; gap: 8px;">
-                        <button onclick="resetPassword(${u.id})" class="btn-secondary" style="padding: 6px 12px; font-size: 12px;">Reset PW</button>
-                        <button onclick="deleteUser(${u.id}, '${u.name}')" class="btn-secondary" style="padding: 6px 12px; font-size: 12px; background: #dc3545; color: white;">Delete</button>
-                    </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
+        }
+
+        async function openFaceModal(userId, userName, hasFace) {
+            currentUserId = userId;
+            faceDescriptor = null;
+            document.getElementById('modalTitle').textContent = hasFace ? 'Update Face Data' : 'Add Face Data';
+            document.getElementById('modalUserName').textContent = userName;
+            document.getElementById('faceModal').classList.add('show');
+            document.getElementById('faceStatus').textContent = 'Loading face detection models...';
+            document.getElementById('captureBtn').style.display = 'none';
+            document.getElementById('saveBtn').style.display = 'none';
+            document.getElementById('faceMsg').className = 'hidden';
+            
+            if (!faceLoaded) {
+                try {
+                    await Promise.all([
+                        faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
+                        faceapi.nets.faceRecognitionNet.loadFromUri('/models'),
+                        faceapi.nets.faceLandmark68Net.loadFromUri('/models')
+                    ]);
+                    faceLoaded = true;
+                } catch (err) {
+                    document.getElementById('faceStatus').textContent = 'Error loading face detection models. Please refresh.';
+                    return;
+                }
+            }
+            
+            startFaceCapture();
+        }
+
+        function closeFaceModal() {
+            document.getElementById('faceModal').classList.remove('show');
+            if (detectionInterval) {
+                clearInterval(detectionInterval);
+                detectionInterval = null;
+            }
+            const video = document.getElementById('faceVideo');
+            if (video.srcObject) {
+                video.srcObject.getTracks().forEach(t => t.stop());
+                video.srcObject = null;
+            }
+        }
+
+        async function startFaceCapture() {
+            const video = document.getElementById('faceVideo');
+            const canvas = document.getElementById('faceCanvas');
+            const captureBtn = document.getElementById('captureBtn');
+            const faceStatus = document.getElementById('faceStatus');
+            
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { width: 320, height: 240, facingMode: 'user' } 
+                });
+                video.srcObject = stream;
+                
+                video.onloadedmetadata = () => {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    faceStatus.textContent = 'Position your face in the camera...';
+                    
+                    detectionInterval = setInterval(async () => {
+                        if (video.readyState !== 4) return;
+                        
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                        
+                        const detection = await faceapi.detectSingleFace(canvas, 
+                            new faceapi.TinyFaceDetectorOptions({ inputSize: 224 }))
+                            .withFaceLandmarks()
+                            .withFaceDescriptor();
+                        
+                        if (detection) {
+                            faceDescriptor = Array.from(detection.descriptor);
+                            captureBtn.style.display = 'inline-flex';
+                            faceStatus.textContent = 'Face detected! Click capture.';
+                            faceStatus.style.color = 'var(--success)';
+                        } else {
+                            faceDescriptor = null;
+                            captureBtn.style.display = 'none';
+                            faceStatus.textContent = 'Position your face in the camera...';
+                            faceStatus.style.color = 'var(--gray-500)';
+                        }
+                    }, 200);
+                };
+            } catch (err) {
+                faceStatus.textContent = 'Camera access denied. Please allow camera permissions.';
+                faceStatus.style.color = 'var(--danger)';
+            }
+        }
+
+        function captureFace() {
+            if (!faceDescriptor) {
+                alert('No face detected. Position your face in the camera.');
+                return;
+            }
+            document.getElementById('captureBtn').style.display = 'none';
+            document.getElementById('saveBtn').style.display = 'inline-flex';
+            document.getElementById('faceStatus').textContent = 'Face captured! Click Save to store.';
+            document.getElementById('faceStatus').style.color = 'var(--success)';
+        }
+
+        async function saveFace() {
+            if (!faceDescriptor || !currentUserId) return;
+            
+            const saveBtn = document.getElementById('saveBtn');
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Saving...';
+            
+            const res = await fetch('/api/faces', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    userId: currentUserId,
+                    descriptor: faceDescriptor
+                }),
+                credentials: 'same-origin'
+            });
+            
+            const msgEl = document.getElementById('faceMsg');
+            if (res.ok) {
+                msgEl.textContent = 'Face data saved successfully!';
+                msgEl.className = 'text-success';
+                setTimeout(() => {
+                    closeFaceModal();
+                    loadUsers();
+                }, 1500);
+            } else {
+                msgEl.textContent = 'Error saving face data. Please try again.';
+                msgEl.className = 'text-danger';
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Save Face Data';
+            }
+            msgEl.classList.remove('hidden');
         }
 
         async function resetPassword(userId) {
@@ -83,6 +495,14 @@
             } else {
                 alert('Error deleting user');
             }
+        }
+
+        function filterUsers() {
+            const query = document.getElementById('searchUser').value.toLowerCase();
+            document.querySelectorAll('.user-card').forEach(card => {
+                const text = card.textContent.toLowerCase();
+                card.style.display = text.includes(query) ? '' : 'none';
+            });
         }
 
         (async () => {
