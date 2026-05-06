@@ -50,14 +50,6 @@ function generateSessionToken() {
     return crypto.randomBytes(16).toString('hex');
 }
 
-function faceDistance(desc1, desc2) {
-    let sum = 0;
-    for (let i = 0; i < desc1.length; i++) {
-        sum += Math.pow(desc1[i] - desc2[i], 2);
-    }
-    return Math.sqrt(sum);
-}
-
 // ============ AUTH API ============
 
 app.post('/api/login', (req, res) => {
@@ -74,13 +66,13 @@ app.post('/api/login', (req, res) => {
             req.session.userId = user.id;
             req.session.role = user.role;
             req.session.name = user.name;
-            req.session.faceVerified = false; // Reset face verification flag
+            req.session.username = user.username;
+            req.session.faceVerified = false;
             
-            // Students must verify face first, others go directly
             const roleToPage = {
                 'admin': 'admin.html',
                 'teacher': 'teacher.html',
-                'student': 'face-verify.html'  // Force face verification for students
+                'student': 'face-verify.html'
             };
             
             res.json({ message: 'Login successful', role: user.role, name: user.name, redirect: roleToPage[user.role] });
@@ -90,7 +82,6 @@ app.post('/api/login', (req, res) => {
     });
 });
 
-// Face verification endpoint - sets flag after successful face match
 app.post('/api/face-verify', requireAuth, (req, res) => {
     if (req.session.role !== 'student') {
         return res.status(403).json({ error: 'Only students need face verification' });
@@ -113,6 +104,7 @@ app.post('/api/change-password', (req, res) => {
                 req.session.userId = user.id;
                 req.session.role = user.role;
                 req.session.name = user.name;
+                req.session.username = user.username;
                 res.json({ message: 'Password updated', role: user.role, name: user.name });
             });
         } else {
@@ -144,16 +136,16 @@ app.get('/api/session', (req, res) => {
 
 // ============ USER MANAGEMENT API ============
 
-    app.post('/api/users', requireAuth, requireRole('admin'), (req, res) => {
-        const { username, password, name, role, section } = req.body;
-        const hash = bcrypt.hashSync(password, 10);
-        db.run("INSERT INTO users (username, password, name, role, section) VALUES (?, ?, ?, ?, ?)",
-            [username, hash, name, role, section || null],
-            function(err) {
-                if (err) return res.status(400).json({ error: 'Username may already exist' });
-                res.json({ id: this.lastID, message: 'User created' });
-            });
-    });
+app.post('/api/users', requireAuth, requireRole('admin'), (req, res) => {
+    const { username, password, name, role, section } = req.body;
+    const hash = bcrypt.hashSync(password, 10);
+    db.run("INSERT INTO users (username, password, name, role, section) VALUES (?, ?, ?, ?, ?)",
+        [username, hash, name, role, section || null],
+        function(err) {
+            if (err) return res.status(400).json({ error: 'Username may already exist' });
+            res.json({ id: this.lastID, message: 'User created' });
+        });
+});
 
 app.get('/api/users', requireAuth, (req, res) => {
     db.all("SELECT id, username, name, role FROM users", (err, rows) => {
@@ -180,8 +172,8 @@ app.delete('/api/users/:id', requireAuth, requireRole('admin'), (req, res) => {
     
     db.serialize(() => {
         db.run("DELETE FROM face_descriptors WHERE user_id = ?", [userId]);
-        db.run("DELETE FROM attendance_records WHERE student_id = ?", [userId], (err) => {});
-        db.run("DELETE FROM attendance_sessions WHERE faculty_id = ?", [userId], (err) => {});
+        db.run("DELETE FROM attendance_records WHERE student_id = ?", [userId]);
+        db.run("DELETE FROM attendance_sessions WHERE faculty_id = ?", [userId]);
         db.run("DELETE FROM users WHERE id = ?", [userId], function(err) {
             if (err) return res.status(500).json({ error: err.message });
             res.json({ message: 'Deleted' });
@@ -194,7 +186,6 @@ app.delete('/api/users/:id', requireAuth, requireRole('admin'), (req, res) => {
 app.post('/api/faces', requireAuth, (req, res) => {
     const { userId, descriptor } = req.body;
     
-    // Allow if admin, or if user is saving their own face
     if (req.session.role !== 'admin' && req.session.userId != userId) {
         return res.status(403).json({ error: 'Forbidden: You can only save your own face data' });
     }
@@ -323,7 +314,6 @@ app.post('/api/attendance/verify-mark', requireAuth, (req, res) => {
                     if (err) return res.status(500).json({ error: err.message });
                     if (existing) return res.status(400).json({ error: 'Attendance already marked' });
                     
-                    // Mark attendance (face verification was done at login)
                     db.run("INSERT INTO attendance_records (session_id, student_id) VALUES (?, ?)",
                         [sessionId, req.session.userId],
                         (err) => {
@@ -365,9 +355,7 @@ app.get('/api/attendance/percentage', requireAuth, (req, res) => {
         return res.status(403).json({ error: 'Only students can view their attendance percentage' });
     }
     
-    // Get all sessions and count attended sessions
-    db.all(`SELECT s.id as session_id, s.subject, s.section_name
-            FROM attendance_sessions s`, 
+    db.all(`SELECT s.id as session_id, s.subject, s.section_name FROM attendance_sessions s`, 
         [], (err, sessions) => {
             if (err) return res.status(500).json({ error: err.message });
             
@@ -381,7 +369,6 @@ app.get('/api/attendance/percentage', requireAuth, (req, res) => {
                     const attendedCount = attended.length;
                     const overallPercentage = totalSessions > 0 ? ((attendedCount / totalSessions) * 100).toFixed(2) : 0;
                     
-                    // Calculate per subject
                     const subjectMap = {};
                     sessions.forEach(s => {
                         if (!subjectMap[s.subject]) {
@@ -412,85 +399,20 @@ app.get('/api/attendance/percentage', requireAuth, (req, res) => {
         });
 });
 
-    app.get('/api/attendance/reports', requireAuth, (req, res) => {
-        let query = `
-            SELECT r.id, s.id as session_id, s.section_name, s.topic, s.subject, s.start_time, s.end_time, u.section, u.name as student_name, r.timestamp
-            FROM attendance_records r
-            JOIN attendance_sessions s ON r.session_id = s.id
-            JOIN users u ON r.student_id = u.id
-        `;
-        
-        // Add filters
-        if (req.session.role === 'student') {
-            query += ` WHERE r.student_id = ?`;
-            db.all(query, [req.session.userId], (err, rows) => {
-                if (err) return res.status(500).json({ error: err.message });
-                res.json(rows);
-            });
-        } else if (req.session.role === 'teacher') {
-            query += ` WHERE s.faculty_id = ?`;
-            db.all(query, [req.session.userId], (err, rows) => {
-                if (err) return res.status(500).json({ error: err.message });
-                res.json(rows);
-            });
-        } else {
-            db.all(query, [], (err, rows) => {
-                if (err) return res.status(500).json({ error: err.message });
-                res.json(rows);
-            });
-        }
-        return;
-    });
-        
-        // Add filters
-        if (req.session.role === 'student') {
-            query += ` WHERE r.student_id = ?`;
-            db.all(query, [req.session.userId], (err, rows) => {
-                if (err) return res.status(500).json({ error: err.message });
-                res.json(rows);
-            });
-        } else if (req.session.role === 'teacher') {
-            query += ` WHERE s.faculty_id = ?`;
-            db.all(query, [req.session.userId], (err, rows) => {
-                if (err) return res.status(500).json({ error: err.message });
-                res.json(rows);
-            });
-        } else {
-            db.all(query, [], (err, rows) => {
-                if (err) return res.status(500).json({ error: err.message });
-                res.json(rows);
-            });
-        }
-        return;
-    });
-        
-        // Add filters
-        if (req.session.role === 'student') {
-            query += ` WHERE r.student_id = ?`;
-            db.all(query, [req.session.userId], (err, rows) => {
-                if (err) return res.status(500).json({ error: err.message });
-                res.json(rows);
-            });
-        } else if (req.session.role === 'teacher') {
-            query += ` WHERE s.faculty_id = ?`;
-            db.all(query, [req.session.userId], (err, rows) => {
-                if (err) return res.status(500).json({ error: err.message });
-                res.json(rows);
-            });
-        } else {
-            db.all(query, [], (err, rows) => {
-                if (err) return res.status(500).json({ error: err.message });
-                res.json(rows);
-            });
-        }
-    });
+app.get('/api/attendance/reports', requireAuth, (req, res) => {
+    let query = `
+        SELECT r.id, s.id as session_id, s.section_name, s.topic, s.subject, s.start_time, s.end_time, u.section, u.name as student_name, r.timestamp
+        FROM attendance_records r
+        JOIN attendance_sessions s ON r.session_id = s.id
+        JOIN users u ON r.student_id = u.id
+    `;
     let params = [];
     
     if (req.session.role === 'student') {
-        query += " WHERE r.student_id = ?";
+        query += ` WHERE r.student_id = ?`;
         params.push(req.session.userId);
     } else if (req.session.role === 'teacher') {
-        query += " WHERE s.faculty_id = ?";
+        query += ` WHERE s.faculty_id = ?`;
         params.push(req.session.userId);
     }
     
