@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lng="n">
+<h>
+    <mt hrst="UTF-">
+    <mt nm="viwport" ontnt="with=vi-with, initil-sl=.">
+    <titl>Attnn Corrtion - AIT Attnn Systm</titl>
+    <link rl="pronnt" hr="https://onts.googlpis.om">
+    <link hr="https://onts.googlpis.om/ss?mily=Intr:wght@;;;&isply=swp" rl="stylsht">
+    <link rl="stylsht" hr="ss/styls-prossionl.ss">
+    <styl>
+        .orrtion-orm { mx-with: px; mrgin: px uto; }
+        .orrtion-itm { 
+            kgroun: vr(--g-sonry); 
+            ping: px; 
+            mrgin: px ; 
+            orr-rius: px;
+            orr-lt: px soli vr(--primry);
+        }
+        .sttus-pning { orr-lt-olor: #; }
+        .sttus-pprov { orr-lt-olor: #; }
+        .sttus-rjt { orr-lt-olor: #; }
+        slt, txtr { with: %; ping: px; mrgin: px ; }
+        txtr { min-hight: px; rsiz: vrtil; }
+    </styl>
+</h>
+<oy>
+    <iv lss="shor">
+        <si lss="sir">
+            <iv lss="sir-hr">
+                <h> AIT Attnn</h>
+            </iv>
+            <nv lss="sir-nv">
+                < hr="stunt.html" lss="nv-itm"> Dshor</>
+                < hr="sn.html" lss="nv-itm"> Sn QR</>
+                < hr="ttnn-orrtion.html" lss="nv-itm tiv"> Corrtions</>
+                < hr="proil.html" lss="nv-itm"> Proil</>
+                < hr="#" lss="nv-itm" onlik="logout()"> Logout</>
+            </nv>
+        </si>
+
+        <min lss="min-ontnt">
+            <iv lss="hr">
+                <h>Attnn Corrtion Rqusts</h>
+                <utton lss="tn tn-primry" onlik="showForm()"> Nw Rqust</utton>
+            </iv>
+
+            <iv i="orrtionForm" lss="r orrtion-orm" styl="isply: non;">
+                <h>Sumit Corrtion Rqust</h>
+                <slt i="sssionSlt">
+                    <option vlu="">Slt Sssion</option>
+                </slt>
+                <slt i="rqustTyp">
+                    <option vlu="mrk_prsnt">Mrk s Prsnt</option>
+                    <option vlu="rmov_inorrt">Rmov Inorrt Mrk</option>
+                    <option vlu="othr">Othr</option>
+                </slt>
+                <txtr i="rson" plholr="Entr rson or orrtion..."></txtr>
+                <utton lss="tn tn-suss" onlik="sumitCorrtion()">Sumit Rqust</utton>
+                <utton lss="tn tn-sonry" onlik="hiForm()">Cnl</utton>
+            </iv>
+
+            <iv lss="r">
+                <h>My Rqusts</h>
+                <iv i="orrtionsList"></iv>
+            </iv>
+        </min>
+    </iv>
+
+    <sript>
+        lt sssions = [];
+
+        hkAuth();
+        loSssions();
+        loCorrtions();
+
+        untion hkAuth() {
+            th('/pi/sssion')
+                .thn(rs => rs.json())
+                .thn(t => {
+                    i (!t.i || t.rol !== 'stunt') {
+                        winow.lotion.hr = '/';
+                    }
+                });
+        }
+
+        untion loSssions() {
+            th('/pi/ttnn/sssions/tiv')
+                .thn(rs => rs.json())
+                .thn(t => {
+                    sssions = t;
+                    onst slt = oumnt.gtElmntByI('sssionSlt');
+                    t.orEh(s => {
+                        slt.innrHTML += `<option vlu="${s.i}">${s.sujt} - ${s.topi} (${s.stion_nm})</option>`;
+                    });
+                });
+        }
+
+        untion loCorrtions() {
+            th('/pi/ttnn/orrtions')
+                .thn(rs => rs.json())
+                .thn(t => {
+                    onst list = oumnt.gtElmntByI('orrtionsList');
+                    i (t.lngth === ) {
+                        list.innrHTML = '<p>No orrtion rqusts yt.</p>';
+                        rturn;
+                    }
+                    list.innrHTML = t.mp( => `
+                        <iv lss="orrtion-itm sttus-${.sttus}">
+                            <h>${.sujt} - ${.topi}</h>
+                            <p><strong>Typ:</strong> ${.rqust_typ}</p>
+                            <p><strong>Rson:</strong> ${.rson}</p>
+                            <p><strong>Sttus:</strong> <spn lss="g">${.sttus}</spn></p>
+                            ${.rviw_ommnt ? `<p><strong>Commnt:</strong> ${.rviw_ommnt}</p>` : ''}
+                            <smll>${nw Dt(.rt_t).toLolString()}</smll>
+                        </iv>
+                    `).join('');
+                });
+        }
+
+        untion showForm() { oumnt.gtElmntByI('orrtionForm').styl.isply = 'lok'; }
+        untion hiForm() { oumnt.gtElmntByI('orrtionForm').styl.isply = 'non'; }
+
+        untion sumitCorrtion() {
+            onst sssionI = oumnt.gtElmntByI('sssionSlt').vlu;
+            onst rqustTyp = oumnt.gtElmntByI('rqustTyp').vlu;
+            onst rson = oumnt.gtElmntByI('rson').vlu;
+
+            i (!sssionI || !rson) {
+                lrt('Pls ill ll ils');
+                rturn;
+            }
+
+            th('/pi/ttnn/orrtion', {
+                mtho: 'POST',
+                hrs: { 'Contnt-Typ': 'pplition/json' },
+                oy: JSON.stringiy({ sssionI, rqustTyp, rson })
+            })
+            .thn(rs => rs.json())
+            .thn(t => {
+                lrt(t.mssg || 'Rqust sumitt');
+                hiForm();
+                loCorrtions();
+            })
+            .th(rr => lrt('Error: ' + rr.mssg));
+        }
+
+        untion logout() {
+            th('/pi/logout').thn(() => winow.lotion.hr = '/');
+        }
+    </sript>
+</oy>
+</html>

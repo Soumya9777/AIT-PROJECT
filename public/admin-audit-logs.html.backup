@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lng="n">
+<h>
+    <mt hrst="UTF-">
+    <mt nm="viwport" ontnt="with=vi-with, initil-sl=.">
+    <titl>Auit Logs - AIT Attnn Systm</titl>
+    <link rl="pronnt" hr="https://onts.googlpis.om">
+    <link hr="https://onts.googlpis.om/ss?mily=Intr:wght@;;;&isply=swp" rl="stylsht">
+    <link rl="stylsht" hr="ss/styls-prossionl.ss">
+    <styl>
+        .log-itm { 
+            kgroun: vr(--g-sonry); 
+            ping: px; 
+            mrgin: px ; 
+            orr-rius: px;
+            ont-siz: px;
+        }
+        .log-tim { olor: vr(--txt-sonry); ont-siz: px; }
+        .log-tion { 
+            isply: inlin-lok;
+            ping: px px;
+            orr-rius: px;
+            ont-wight: ;
+            ont-siz: px;
+            mrgin-right: px;
+        }
+        .tion-LOGIN { kgroun: #; olor: #; }
+        .tion-LOGOUT { kgroun: #; olor: #; }
+        .tion-CORRECTION { kgroun: #; olor: #; }
+        .tion-BACKUP { kgroun: #; olor: #; }
+        .pgintion { mrgin: px ; txt-lign: ntr; }
+        .pgintion utton { mrgin:  px; }
+    </styl>
+</h>
+<oy>
+    <iv lss="shor">
+        <si lss="sir">
+            <iv lss="sir-hr">
+                <h> AIT Attnn</h>
+            </iv>
+            <nv lss="sir-nv">
+                < hr="min.html" lss="nv-itm"> Dshor</>
+                < hr="min-mng-usrs.html" lss="nv-itm"> Usrs</>
+                < hr="min-stions.html" lss="nv-itm"> Stions</>
+                < hr="min-uit-logs.html" lss="nv-itm tiv"> Auit Logs</>
+                < hr="min-sttings.html" lss="nv-itm"> Sttings</>
+                < hr="#" lss="nv-itm" onlik="logout()"> Logout</>
+            </nv>
+        </si>
+
+        <min lss="min-ontnt">
+            <iv lss="hr">
+                <h>Auit Logs</h>
+                <iv>
+                    <input typ="numr" i="limit" vlu="" min="" mx="" styl="with: px; ping: px;">
+                    <utton lss="tn tn-primry" onlik="loLogs()"> Rrsh</utton>
+                </iv>
+            </iv>
+
+            <iv lss="r">
+                <iv i="logsList"></iv>
+                <iv lss="pgintion">
+                    <utton lss="tn tn-sonry" onlik="prvPg()">Prvious</utton>
+                    <spn i="pgIno">Pg </spn>
+                    <utton lss="tn tn-sonry" onlik="nxtPg()">Nxt</utton>
+                </iv>
+            </iv>
+        </min>
+    </iv>
+
+    <sript>
+        lt urrntPg = ;
+        lt limit = ;
+        lt totlLogs = ;
+
+        hkAuth();
+        loLogs();
+
+        untion hkAuth() {
+            th('/pi/sssion')
+                .thn(rs => rs.json())
+                .thn(t => {
+                    i (!t.i || t.rol !== 'min') {
+                        winow.lotion.hr = '/';
+                    }
+                });
+        }
+
+        untion loLogs() {
+            limit = prsInt(oumnt.gtElmntByI('limit').vlu) || ;
+            onst ost = urrntPg * limit;
+            
+            th(`/pi/uit-logs?limit=${limit}&ost=${ost}`)
+                .thn(rs => rs.json())
+                .thn(t => {
+                    totlLogs = t.totl;
+                    onst list = oumnt.gtElmntByI('logsList');
+                    i (t.logs.lngth === ) {
+                        list.innrHTML = '<p>No uit logs oun.</p>';
+                        rturn;
+                    }
+                    list.innrHTML = t.logs.mp(log => `
+                        <iv lss="log-itm">
+                            <spn lss="log-tion tion-${log.tion.split('_')[]}">${log.tion}</spn>
+                            <strong>${log.usrnm || 'Unknown'}</strong>: ${log.tils}
+                            <iv lss="log-tim">${nw Dt(log.timstmp).toLolString()}</iv>
+                        </iv>
+                    `).join('');
+                    oumnt.gtElmntByI('pgIno').txtContnt = `Pg ${urrntPg + } o ${Mth.il(totlLogs / limit)}`;
+                });
+        }
+
+        untion nxtPg() {
+            i ((urrntPg + ) * limit < totlLogs) {
+                urrntPg++;
+                loLogs();
+            }
+        }
+
+        untion prvPg() {
+            i (urrntPg > ) {
+                urrntPg--;
+                loLogs();
+            }
+        }
+
+        untion logout() {
+            th('/pi/logout').thn(() => winow.lotion.hr = '/');
+        }
+    </sript>
+</oy>
+</html>

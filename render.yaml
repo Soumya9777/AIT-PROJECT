@@ -9,3 +9,9 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: DB_PATH
+        value: /data/attendance.db
+    disk:
+      name: attendance-data
+      mountPath: /data
+      size: 1GB

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lng="n">
+<h>
+    <mt hrst="UTF-">
+    <mt nm="viwport" ontnt="with=vi-with, initil-sl=.">
+    <titl>Proil | Smrt Attnn</titl>
+    <link rl="stylsht" hr="ss/styls-prossionl.ss">
+    <link hr="https://onts.googlpis.om/ss?mily=Intr:wght@;;;;;&isply=swp" rl="stylsht">
+    <sript sr="js/tost.js"></sript>
+</h>
+<oy>
+    <iv lss="ontinr">
+        <hr lss="hr">
+            <h>
+                <img sr="imgs/ollg-logo.jpg" lt="Logo" lss="hr-logo">
+                My Proil
+            </h>
+            <utton onlik="goBk()" lss="tn-sonry">Bk</utton>
+        </hr>
+
+        <iv lss="r">
+            <iv lss="r-hr">
+                <iv lss="r-hr-ion"></iv>
+                <h>Proil Inormtion</h>
+            </iv>
+            <iv i="proilIno" styl="ping: px;">
+                <iv styl="isply: gri; gri-tmplt-olumns: rpt(uto-it, minmx(px, r)); gp: px;">
+                    <iv>
+                        <iv styl="ont-siz: px; olor: vr(--gry-); txt-trnsorm: upprs; lttr-sping: .px; mrgin-ottom: px;">Usrnm</iv>
+                        <iv i="inoUsrnm" styl="ont-siz: px; ont-wight: ;">Loing...</iv>
+                    </iv>
+                    <iv>
+                        <iv styl="ont-siz: px; olor: vr(--gry-); txt-trnsorm: upprs; lttr-sping: .px; mrgin-ottom: px;">Full Nm</iv>
+                        <iv i="inoNm" styl="ont-siz: px; ont-wight: ;">Loing...</iv>
+                    </iv>
+                    <iv>
+                        <iv styl="ont-siz: px; olor: vr(--gry-); txt-trnsorm: upprs; lttr-sping: .px; mrgin-ottom: px;">Rol</iv>
+                        <iv i="inoRol" styl="ont-siz: px; ont-wight: ;">Loing...</iv>
+                    </iv>
+                </iv>
+            </iv>
+        </iv>
+
+        <iv lss="r" styl="mrgin-top: px;">
+            <iv lss="r-hr">
+                <iv lss="r-hr-ion"></iv>
+                <h>Chng Psswor</h>
+            </iv>
+            <orm i="hngPssworForm" styl="ping: px;">
+                <iv lss="orm-group">
+                    <ll>Currnt Psswor</ll>
+                    <input typ="psswor" i="urrntPsswor" rquir>
+                </iv>
+                <iv lss="orm-group">
+                    <ll>Nw Psswor</ll>
+                    <input typ="psswor" i="nwPsswor" rquir>
+                </iv>
+                <iv lss="orm-group">
+                    <ll>Conirm Nw Psswor</ll>
+                    <input typ="psswor" i="onirmPsswor" rquir>
+                </iv>
+                <utton typ="sumit" lss="tn-primry" styl="with: %;"> Chng Psswor</utton>
+                <iv i="pssworMsg" styl="mrgin-top: px;"></iv>
+            </orm>
+        </iv>
+    </iv>
+
+    <sript>
+        lt urrntUsrDt = null;
+
+        (syn () => {
+            onst rs = wit th('/pi/sssion', { rntils: 'sm-origin' });
+            urrntUsrDt = wit rs.json();
+            
+            i (!urrntUsrDt.i) {
+                lotion.hr = '/';
+                rturn;
+            }
+
+            // Fill proil ino
+            oumnt.gtElmntByI('inoUsrnm').txtContnt = urrntUsrDt.usrnm || 'N/A';
+            oumnt.gtElmntByI('inoNm').txtContnt = urrntUsrDt.nm || 'N/A';
+            oumnt.gtElmntByI('inoRol').txtContnt = urrntUsrDt.rol || 'N/A';
+        })();
+
+        oumnt.gtElmntByI('hngPssworForm').EvntListnr('sumit', syn () => {
+            .prvntDult();
+            
+            onst urrnt = urrntPsswor.vlu;
+            onst nwPss = nwPsswor.vlu;
+            onst onirm = onirmPsswor.vlu;
+            
+            i (nwPss !== onirm) {
+                oumnt.gtElmntByI('pssworMsg').innrHTML = '<iv lss="txt-ngr">Psswors o not mth</iv>';
+                rturn;
+            }
+
+            i (nwPss.lngth < ) {
+                oumnt.gtElmntByI('pssworMsg').innrHTML = '<iv lss="txt-ngr">Psswor must  t lst  hrtrs</iv>';
+                rturn;
+            }
+
+            onst tn = .trgt.qurySltor('utton');
+            tn.lssList.('loing');
+            tn.isl = tru;
+
+            // First vriy urrnt psswor
+            onst vriyRs = wit th('/pi/login', {
+                mtho: 'POST',
+                hrs: {'Contnt-Typ': 'pplition/json'},
+                oy: JSON.stringiy({
+                    usrnm: urrntUsrDt.usrnm,
+                    psswor: urrnt
+                }),
+                rntils: 'sm-origin'
+            });
+
+            i (!vriyRs.ok) {
+                tn.lssList.rmov('loing');
+                tn.isl = ls;
+                oumnt.gtElmntByI('pssworMsg').innrHTML = '<iv lss="txt-ngr">Currnt psswor is inorrt</iv>';
+                rturn;
+            }
+
+            // Chng psswor
+            onst hngRs = wit th('/pi/hng-psswor', {
+                mtho: 'POST',
+                hrs: {'Contnt-Typ': 'pplition/json'},
+                oy: JSON.stringiy({
+                    usrnm: urrntUsrDt.usrnm,
+                    tmporryPsswor: urrnt,
+                    nwPsswor: nwPss
+                }),
+                rntils: 'sm-origin'
+            });
+
+            tn.lssList.rmov('loing');
+            tn.isl = ls;
+
+            onst msgEl = oumnt.gtElmntByI('pssworMsg');
+            
+            i (hngRs.ok) {
+                msgEl.innrHTML = '<iv lss="txt-suss"> Psswor hng sussully!</iv>';
+                .trgt.rst();
+            } ls {
+                onst t = wit hngRs.json();
+                msgEl.innrHTML = `<iv lss="txt-ngr">${t.rror || 'Fil to hng psswor'}</iv>`;
+            }
+        });
+
+        untion goBk() {
+            i (urrntUsrDt) {
+                lotion.hr = urrntUsrDt.rol + '.html';
+            } ls {
+                lotion.hr = '/';
+            }
+        }
+
+        untion logout() {
+            th('/pi/logout', { rntils: 'sm-origin' }).thn(() => lotion.hr = '/');
+        }
+    </sript>
+</oy>
+</html>

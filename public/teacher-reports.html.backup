@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lng="n">
+<h>
+    <mt hrst="UTF-">
+    <mt nm="viwport" ontnt="with=vi-with, initil-sl=.">
+    <titl>Attnn Rports | Thr Portl</titl>
+    <link rl="stylsht" hr="ss/styls-prossionl.ss">
+    <link hr="https://onts.googlpis.om/ss?mily=Intr:wght@;;;;;&isply=swp" rl="stylsht">
+    <sript sr="js/tost.js"></sript>
+</h>
+<oy>
+    <iv lss="ontinr">
+        <hr lss="hr">
+            <h>
+                <img sr="imgs/ollg-logo.jpg" lt="Logo" lss="hr-logo">
+                Attnn Rports
+            </h>
+            < hr="thr.html" lss="tn-sonry">Bk</>
+        </hr>
+
+        <!-- Stp : Slt Stion -->
+        <iv lss="r">
+            <iv lss="r-hr">
+                <iv lss="r-hr-ion"></iv>
+                <h>Stp : Slt Stion</h>
+            </iv>
+            <iv styl="isply: gri; gri-tmplt-olumns: r uto; gp: px; lign-itms: n;">
+                <iv lss="orm-group" styl="mrgin-ottom: ;">
+                    <ll>Stion</ll>
+                    <slt i="stionSlt" onhng="loDts()">
+                        <option vlu="">-- Slt Stion --</option>
+                    </slt>
+                </iv>
+                <utton onlik="loDts()" lss="tn-primry" styl="hight: it-ontnt;"> Lo</utton>
+            </iv>
+        </iv>
+
+        <!-- Stp : Sssions (Dts & Topis) -->
+        <iv i="tsStion" lss="r hin" styl="mrgin-top: px;">
+            <iv lss="r-hr">
+                <iv lss="r-hr-ion"></iv>
+                <h>Stp : Slt Sssion</h>
+            </iv>
+            <iv i="tsList"></iv>
+        </iv>
+
+        <!-- Stp : Prsnt/Asnt Stunts -->
+        <iv i="ttnnDtils" lss="r hin" styl="mrgin-top: px;">
+            <iv lss="r-hr">
+                <iv lss="r-hr-ion"></iv>
+                <h i="tilTitl">Attnn Dtils</h>
+                <utton onlik="goBk()" lss="tn-sonry" styl="mrgin-lt: uto;">← Bk</utton>
+            </iv>
+            
+            <!-- Prsnt Stunts -->
+            <iv styl="mrgin-top: px;">
+                <h styl="olor: vr(--suss); mrgin-ottom: px;"> Prsnt Stunts (<spn i="prsntCount"></spn>)</h>
+                <iv i="prsntList"></iv>
+            </iv>
+
+            <!-- Asnt Stunts -->
+            <iv styl="mrgin-top: px;">
+                <h styl="olor: vr(--ngr); mrgin-ottom: px;"> Asnt Stunts (<spn i="sntCount"></spn>)</h>
+                <iv i="sntList"></iv>
+            </iv>
+        </iv>
+    </iv>
+
+    <sript>
+        lt llRors = [];
+        lt llStunts = [];
+        lt sltStion = null;
+        lt sltSssionI = null;
+
+        (syn () => {
+            onst rs = wit th('/pi/sssion', { rntils: 'sm-origin' });
+            onst t = wit rs.json();
+            i (!t.rol || t.rol !== 'thr') lotion.hr = '/';
+            
+            loStions();
+            loAllStunts();
+            loRports();
+        })();
+
+        syn untion loStions() {
+            onst rs = wit th('/pi/stions', { rntils: 'sm-origin' });
+            onst stions = wit rs.json();
+            onst slt = oumnt.gtElmntByI('stionSlt');
+            slt.innrHTML = '<option vlu="">-- Slt Stion --</option>' + 
+                stions.mp(s => `<option vlu="${s.nm}">${s.nm} ${s.sription ? '(' + s.sription + ')' : ''}</option>`).join('');
+        }
+
+        syn untion loAllStunts() {
+            onst rs = wit th('/pi/usrs', { rntils: 'sm-origin' });
+            onst usrs = wit rs.json();
+            llStunts = usrs.iltr(u => u.rol === 'stunt');
+        }
+
+        syn untion loRports() {
+            onst rs = wit th('/pi/ttnn/rports', { rntils: 'sm-origin' });
+            llRors = wit rs.json();
+        }
+
+        syn untion loDts() {
+            sltStion = oumnt.gtElmntByI('stionSlt').vlu;
+            i (!sltStion) {
+                oumnt.gtElmntByI('tsStion').lssList.('hin');
+                oumnt.gtElmntByI('ttnnDtils').lssList.('hin');
+                rturn;
+            }
+
+            // Filtr rors y stion
+            onst stionRors = llRors.iltr(r => r.stion_nm === sltStion);
+            
+            i (stionRors.lngth === ) {
+                oumnt.gtElmntByI('tsList').innrHTML = `
+                    <iv styl="txt-lign: ntr; ping: px; olor: vr(--gry-);">
+                        <iv styl="ont-siz: px; mrgin-ottom: px;"></iv>
+                        <p>No ttnn rors or ${sltStion}</p>
+                    </iv>
+                `;
+                oumnt.gtElmntByI('tsStion').lssList.rmov('hin');
+                rturn;
+            }
+
+            // Gt UNIQUE sssions (NOT grouping y t+topi, ut y tul sssion_i)
+            onst sssionsMp = {};
+            stionRors.orEh(r => {
+                i (!sssionsMp[r.sssion_i]) {
+                    sssionsMp[r.sssion_i] = {
+                        sssionI: r.sssion_i,
+                        t: nw Dt(r.timstmp).toLolDtString(),
+                        tim: nw Dt(r.timstmp).toLolTimString(),
+                        topi: r.topi,
+                        sujt: r.sujt
+                    };
+                }
+            });
+
+            onst ontinr = oumnt.gtElmntByI('tsList');
+            ontinr.innrHTML = Ojt.vlus(sssionsMp).mp(s => `
+                <iv lss="list-itm" onlik="loAttnnDtils(${s.sssionI}, '${s.t}', '${s.topi}', '${s.sujt}')" styl="ursor: pointr;">
+                    <iv>
+                        <strong styl="ont-siz: px;">${s.t}</strong><r>
+                        <spn styl="olor: vr(--gry-); ont-siz: px;">
+                            ${s.topi} • ${s.sujt}
+                        </spn><r>
+                        <spn styl="olor: vr(--gry-); ont-siz: px;">
+                             ${s.tim}
+                        </spn>
+                    </iv>
+                    <spn styl="olor: vr(--primry); ont-siz: px;">Viw Dtils →</spn>
+                </iv>
+            `).join('');
+
+            oumnt.gtElmntByI('tsStion').lssList.rmov('hin');
+            oumnt.gtElmntByI('ttnnDtils').lssList.('hin');
+        }
+
+        syn untion loAttnnDtils(sssionI, t, topi, sujt) {
+            sltSssionI = sssionI;
+
+            oumnt.gtElmntByI('tilTitl').txtContnt = `${sltStion} - ${t} - ${topi}`;
+            
+            // Gt ttn stunts or THIS sssion rom llRors
+            onst sssionRors = llRors.iltr(r => r.sssion_i == sssionI);
+            onst ttnStuntNms = sssionRors.mp(r => r.stunt_nm);
+
+            // Gt stunts in th SAME stion
+            onst stionStuntNms = llStunts
+                .iltr(u => u.stion === sltStion)
+                .mp(u => u.nm);
+
+            // Prsnt stunts
+            onst prsntContinr = oumnt.gtElmntByI('prsntList');
+            prsntContinr.innrHTML = ttnStuntNms.mp(nm => `
+                <iv lss="list-itm">
+                    <iv>
+                        <strong>${nm}</strong>
+                    </iv>
+                    <spn lss="g g-suss">Prsnt</spn>
+                </iv>
+            `).join('');
+
+            oumnt.gtElmntByI('prsntCount').txtContnt = ttnStuntNms.lngth;
+
+            // Asnt stunts (stion stunts minus ttn)
+            onst sntNms = stionStuntNms.iltr(nm => !ttnStuntNms.inlus(nm));
+            onst sntContinr = oumnt.gtElmntByI('sntList');
+            
+            i (sntNms.lngth === ) {
+                sntContinr.innrHTML = `
+                    <iv styl="txt-lign: ntr; ping: px; olor: vr(--gry-);">
+                        <p>All stunts prsnt! </p>
+                    </iv>
+                `;
+            } ls {
+                sntContinr.innrHTML = sntNms.mp(nm => `
+                    <iv lss="list-itm">
+                        <iv>
+                            <strong>${nm}</strong>
+                        </iv>
+                        <spn lss="g g-ngr">Asnt</spn>
+                    </iv>
+                `).join('');
+            }
+
+            oumnt.gtElmntByI('sntCount').txtContnt = sntNms.lngth;
+
+            oumnt.gtElmntByI('tsStion').lssList.('hin');
+            oumnt.gtElmntByI('ttnnDtils').lssList.rmov('hin');
+        }
+
+        untion goBk() {
+            oumnt.gtElmntByI('ttnnDtils').lssList.('hin');
+            oumnt.gtElmntByI('tsStion').lssList.rmov('hin');
+        }
+
+        untion logout() {
+            th('/pi/logout', { rntils: 'sm-origin' }).thn(() => lotion.hr = '/');
+        }
+    </sript>
+</oy>
+</html>

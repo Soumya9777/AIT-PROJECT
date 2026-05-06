@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lng="n">
+<h>
+    <mt hrst="UTF-">
+    <mt nm="viwport" ontnt="with=vi-with, initil-sl=.">
+    <titl>Sn Attnn | Smrt Attnn</titl>
+    <link rl="stylsht" hr="ss/styls-prossionl.ss">
+    <sript sr="https://unpkg.om/html-qro@../html-qro.min.js"></sript>
+    <link hr="https://onts.googlpis.om/ss?mily=Intr:wght@;;;;;&isply=swp" rl="stylsht">
+<link rl="ion" hr="imgs/ollg-logo.jpg" typ="img/jpg">
+    <sript sr="js/tost.js"></sript>
+</h>
+<oy>
+    <iv lss="ontinr">
+        <hr lss="hr">
+            <h>
+                <img sr="imgs/ollg-logo.jpg" lt="Logo" lss="hr-logo">
+                Sn Attnn
+            </h>
+            < hr="stunt.html" lss="tn-sonry">Bk</>
+        </hr>
+
+        <iv lss="r" styl="txt-lign: ntr;">
+            <iv styl="mrgin-ottom: px;">
+                <iv styl="with: px; hight: px; mrgin:  uto px; kgroun: linr-grint(g, vr(--primry) %, vr(--nt) %); orr-rius: %; isply: lx; lign-itms: ntr; justiy-ontnt: ntr; ont-siz: px; ox-show:  px px rg(, , , .);">
+                    
+                </iv>
+                <h styl="ont-siz: px; mrgin-ottom: px;">Sn QR Co</h>
+                <p styl="olor: vr(--gry-);">Position th QR o within th rm low</p>
+            </iv>
+            
+            <iv i="qr-rr" styl="with: %; mx-with: px; mrgin:  uto;"></iv>
+            
+            <iv i="qrRsult" lss="hin" styl="mrgin-top: px; ping: px; kgroun: #; orr-rius: vr(--rius-sm); ont-wight: ; olor: #;"></iv>
+        </iv>
+
+        <iv i="mrkAttnn" lss="r hin" styl="txt-lign: ntr; mrgin-top: px;">
+            <iv styl="ont-siz: px; mrgin-ottom: px;">⏳</iv>
+            <h styl="mrgin-ottom: px;">Mrking Attnn...</h>
+            <p styl="olor: vr(--gry-);">Pls wit whil w pross your ttnn</p>
+            <iv i="ttnnMsg" styl="mrgin-top: px;"></iv>
+        </iv>
+    </iv>
+
+    <sript>
+        lt snnSssionI = null;
+        lt snnTokn = null;
+        lt ollgLotion = { lt: ., lng: . }; // Dult: NIST Brhmpur oorints
+        onst ALLOWED_RADIUS = ; // mtrs
+
+        (syn () => {
+            onst rs = wit th('/pi/sssion', { rntils: 'sm-origin' });
+            onst t = wit rs.json();
+            i (!t.i || t.rol !== 'stunt') lotion.hr = '/';
+            
+            i (!t.Vrii) {
+                lotion.hr = '/-vriy.html';
+                rturn;
+            }
+
+            // Lo ollg lotion rom sttings
+            onst sttings = JSON.prs(lolStorg.gtItm('it-sttings') || '{}');
+            i (sttings.ollgLotion) {
+                ollgLotion = sttings.ollgLotion;
+            }
+
+            // Chk goning
+            hkLotion();
+        })();
+
+        untion hkLotion() {
+            i (!nvigtor.golotion) {
+                showGonError('Golotion is not support y your rowsr.');
+                rturn;
+            }
+
+            nvigtor.golotion.gtCurrntPosition(
+                (position) => {
+                    onst istn = lultDistn(
+                        position.oors.ltitu,
+                        position.oors.longitu,
+                        ollgLotion.lt,
+                        ollgLotion.lng
+                    );
+                    
+                    i (istn > ALLOWED_RADIUS) {
+                        showGonError(`You r ${Mth.roun(istn)}m wy rom mpus. You must  within ${ALLOWED_RADIUS}m to mrk ttnn.`);
+                    } ls {
+                        initilizSnnr();
+                    }
+                },
+                (rror) => {
+                    i (rror.o === rror.PERMISSION_DENIED) {
+                        showGonError('Lotion ss ni. Pls nl lotion srvis to mrk ttnn.');
+                    } ls {
+                        showGonError('Unl to gt your lotion. Pls try gin.');
+                    }
+                },
+                { nlHighAury: tru, timout:  }
+            );
+        }
+
+        untion lultDistn(lt, lon, lt, lon) {
+            onst R = ; // Erth's rius in mtrs
+            onst φ = lt * Mth.PI/;
+            onst φ = lt * Mth.PI/;
+            onst Δφ = (lt-lt) * Mth.PI/;
+            onst Δλ = (lon-lon) * Mth.PI/;
+
+            onst  = Mth.sin(Δφ/) * Mth.sin(Δφ/) +
+                      Mth.os(φ) * Mth.os(φ) *
+                      Mth.sin(Δλ/) * Mth.sin(Δλ/);
+            onst  =  * Mth.tn(Mth.sqrt(), Mth.sqrt(-));
+
+            rturn R * ; // Distn in mtrs
+        }
+
+        untion showGonError(mssg) {
+            oumnt.gtElmntByI('qr-rr').innrHTML = `
+                <iv styl="ping: px px; txt-lign: ntr;">
+                    <iv styl="ont-siz: px; mrgin-ottom: px;"></iv>
+                    <h styl="olor: #; mrgin-ottom: px;">Lotion Vriition Fil</h>
+                    <p styl="olor: vr(--gry-);">${mssg}</p>
+                    <utton onlik="lotion.rlo()" lss="tn-sonry" styl="mrgin-top: px;">Rtry</utton>
+                </iv>
+            `;
+        }
+
+        untion initilizSnnr() {
+            onst htmlQro = nw HtmlQro("qr-rr");
+            htmlQro.strt(
+                { ingMo: "nvironmnt" },
+                { ps: , qrox:  },
+                (oTxt) => {
+                    onst t = JSON.prs(oTxt);
+                    snnSssionI = t.sssionI;
+                    snnTokn = t.tokn;
+                    
+                    oumnt.gtElmntByI('qrRsult').innrHTML = ` QR Snn! Sssion: ${snnSssionI}`;
+                    oumnt.gtElmntByI('qrRsult').lssList.rmov('hin');
+                    
+                    htmlQro.stop();
+                    mrkAttnn();
+                },
+                (rror) => {}
+            ).th(rr => onsol.rror(rr));
+        }
+
+        syn untion mrkAttnn() {
+            onst mrkDiv = oumnt.gtElmntByI('mrkAttnn');
+            mrkDiv.lssList.rmov('hin');
+            
+            onst rs = wit th('/pi/ttnn/vriy-mrk', {
+                mtho: 'POST',
+                hrs: {'Contnt-Typ': 'pplition/json'},
+                oy: JSON.stringiy({
+                    sssionI: snnSssionI,
+                    tokn: snnTokn
+                }),
+                rntils: 'sm-origin'
+            });
+            
+            onst t = wit rs.json();
+            onst msgEl = oumnt.gtElmntByI('ttnnMsg');
+            
+            i (rs.ok) {
+                msgEl.innrHTML = `
+                    <iv styl="ping: px; kgroun: #; orr-rius: vr(--rius-sm);">
+                        <iv styl="ont-siz: px; mrgin-ottom: px;"></iv>
+                        <h styl="olor: #; mrgin-ottom: px;">Attnn Mrk!</h>
+                        <p styl="olor: #;">${t.mssg}</p>
+                        < hr="stunt.html" lss="tn-primry" styl="isply: inlin-lok; mrgin-top: px; txt-ortion: non;">
+                            Bk to Dshor
+                        </>
+                    </iv>
+                `;
+            } ls {
+                msgEl.innrHTML = `
+                    <iv styl="ping: px; kgroun: #; orr-rius: vr(--rius-sm);">
+                        <iv styl="ont-siz: px; mrgin-ottom: px;"></iv>
+                        <h styl="olor: #; mrgin-ottom: px;">Fil</h>
+                        <p styl="olor: #;">${t.rror}</p>
+                        <utton onlik="lotion.rlo()" lss="tn-sonry" styl="mrgin-top: px;">
+                            Try Agin
+                        </utton>
+                    </iv>
+                `;
+            }
+        }
+    </sript>
+</oy>
+</html>

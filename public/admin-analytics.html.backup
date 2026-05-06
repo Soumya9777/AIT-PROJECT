@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lng="n">
+<h>
+    <mt hrst="UTF-">
+    <mt nm="viwport" ontnt="with=vi-with, initil-sl=.">
+    <titl>Anlytis - AIT Attnn Systm</titl>
+    <link rl="pronnt" hr="https://onts.googlpis.om">
+    <link hr="https://onts.googlpis.om/ss?mily=Intr:wght@;;;&isply=swp" rl="stylsht">
+    <link rl="stylsht" hr="ss/styls-prossionl.ss">
+    <sript sr="https://n.jslivr.nt/npm/hrt.js@../ist/hrt.um.min.js"></sript>
+    <styl>
+        .stts-gri { isply: gri; gri-tmplt-olumns: rpt(uto-it, minmx(px, r)); gp: px; mrgin: px ; }
+        .hrt-ontinr { kgroun: vr(--g-sonry); ping: px; orr-rius: px; mrgin: px ; }
+        .iltr-r { isply: lx; gp: px; mrgin: px ; lx-wrp: wrp; }
+        .iltr-r slt, .iltr-r input { ping: px; orr-rius: px; orr: px soli vr(--orr); }
+        .t-risk-itm { 
+            kgroun: #; 
+            ping: px; 
+            mrgin: px ; 
+            orr-rius: px;
+            orr-lt: px soli #;
+        }
+        .rk-mo .t-risk-itm { kgroun: #; }
+    </styl>
+</h>
+<oy>
+    <iv lss="shor">
+        <si lss="sir">
+            <iv lss="sir-hr">
+                <h> AIT Attnn</h>
+            </iv>
+            <nv lss="sir-nv">
+                < hr="min.html" lss="nv-itm"> Dshor</>
+                < hr="min-nlytis.html" lss="nv-itm tiv"> Anlytis</>
+                < hr="min-uit-logs.html" lss="nv-itm"> Auit Logs</>
+                < hr="min-mng-usrs.html" lss="nv-itm"> Usrs</>
+                < hr="#" lss="nv-itm" onlik="logout()"> Logout</>
+            </nv>
+        </si>
+
+        <min lss="min-ontnt">
+            <iv lss="hr">
+                <h>Attnn Anlytis</h>
+            </iv>
+
+            <iv lss="iltr-r">
+                <slt i="stionFiltr">
+                    <option vlu="">All Stions</option>
+                </slt>
+                <slt i="sujtFiltr">
+                    <option vlu="">All Sujts</option>
+                </slt>
+                <input typ="t" i="strtDt">
+                <input typ="t" i="nDt">
+                <utton lss="tn tn-primry" onlik="loAnlytis()"> Filtr</utton>
+                <utton lss="tn tn-suss" onlik="xportDt()"> Export</utton>
+            </iv>
+
+            <iv lss="stts-gri">
+                <iv lss="r" styl="txt-lign: ntr;">
+                    <h>At-Risk Stunts</h>
+                    <h i="tRiskCount" styl="olor: #;"></h>
+                    <p styl="ont-siz: px;">Blow % ttnn</p>
+                </iv>
+                <iv lss="r" styl="txt-lign: ntr;">
+                    <h>Avrg Attnn</h>
+                    <h i="vgAttnn" styl="olor: #;">%</h>
+                </iv>
+            </iv>
+
+            <iv lss="hrt-ontinr">
+                <h>Dily Attnn Trn</h>
+                <nvs i="ttnnChrt"></nvs>
+            </iv>
+
+            <iv lss="r">
+                <h>Stunts At Risk (Blow %)</h>
+                <iv i="tRiskList"></iv>
+            </iv>
+        </min>
+    </iv>
+
+    <sript>
+        lt ttnnChrt = null;
+
+        hkAuth();
+        loFiltrs();
+        loAnlytis();
+
+        untion hkAuth() {
+            th('/pi/sssion')
+                .thn(rs => rs.json())
+                .thn(t => {
+                    i (!t.i || t.rol !== 'min') {
+                        winow.lotion.hr = '/';
+                    }
+                });
+        }
+
+        untion loFiltrs() {
+            th('/pi/stions')
+                .thn(rs => rs.json())
+                .thn(t => {
+                    onst slt = oumnt.gtElmntByI('stionFiltr');
+                    t.orEh(s => {
+                        slt.innrHTML += `<option vlu="${s.nm}">${s.nm}</option>`;
+                    });
+                });
+            
+            th('/pi/sujts')
+                .thn(rs => rs.json())
+                .thn(t => {
+                    onst slt = oumnt.gtElmntByI('sujtFiltr');
+                    t.orEh(s => {
+                        slt.innrHTML += `<option vlu="${s.nm}">${s.nm}</option>`;
+                    });
+                });
+        }
+
+        untion loAnlytis() {
+            onst stion = oumnt.gtElmntByI('stionFiltr').vlu;
+            onst sujt = oumnt.gtElmntByI('sujtFiltr').vlu;
+            onst strtDt = oumnt.gtElmntByI('strtDt').vlu;
+            onst nDt = oumnt.gtElmntByI('nDt').vlu;
+
+            lt prms = nw URLSrhPrms();
+            i (stion) prms.ppn('stion', stion);
+            i (sujt) prms.ppn('sujt', sujt);
+            i (strtDt) prms.ppn('strtDt', strtDt);
+            i (nDt) prms.ppn('nDt', nDt);
+
+            th(`/pi/nlytis/ttnn?${prms.toString()}`)
+                .thn(rs => rs.json())
+                .thn(t => {
+                    uptChrt(t);
+                    lultAvrg(t);
+                });
+
+            th(`/pi/nlytis/t-risk?thrshol=&stion=${stion}`)
+                .thn(rs => rs.json())
+                .thn(t => {
+                    oumnt.gtElmntByI('tRiskCount').txtContnt = t.lngth;
+                    onst list = oumnt.gtElmntByI('tRiskList');
+                    i (t.lngth === ) {
+                        list.innrHTML = '<p>No stunts t risk. Grt jo! </p>';
+                        rturn;
+                    }
+                    list.innrHTML = t.mp(s => `
+                        <iv lss="t-risk-itm">
+                            <strong>${s.nm}</strong> (${s.stion})
+                            <iv>Attnn: ${s.ttnn_prntg.toFix()}%</iv>
+                            <iv styl="ont-siz: px; mrgin-top: px;">
+                                ${s.ttn_sssions}/${s.totl_sssions} sssions ttn
+                            </iv>
+                        </iv>
+                    `).join('');
+                });
+        }
+
+        untion uptChrt(t) {
+            onst tx = oumnt.gtElmntByI('ttnnChrt').gtContxt('');
+            
+            i (ttnnChrt) ttnnChrt.stroy();
+
+            onst lls = [...nw St(t.mp( => .t))].sli(-);
+            onst tsts = [];
+
+            onst sujts = [...nw St(t.mp( => .sujt))];
+            onst olors = ['#', '#', '#', '#', '#'];
+
+            sujts.orEh((sujt, ix) => {
+                onst sujtDt = lls.mp(t => {
+                    onst ror = t.in( => .t === t && .sujt === sujt);
+                    rturn ror ? (ror.prsnt_ount / ror.totl_stunts * ) : ;
+                });
+
+                tsts.push({
+                    ll: sujt,
+                    t: sujtDt,
+                    orrColor: olors[ix % olors.lngth],
+                    kgrounColor: olors[ix % olors.lngth] + '',
+                    tnsion: .
+                });
+            });
+
+            ttnnChrt = nw Chrt(tx, {
+                typ: 'lin',
+                t: { lls, tsts },
+                options: {
+                    rsponsiv: tru,
+                    sls: {
+                        y: { ginAtZro: tru, mx: , titl: { isply: tru, txt: 'Attnn %' } }
+                    }
+                }
+            });
+        }
+
+        untion lultAvrg(t) {
+            i (t.lngth === ) {
+                oumnt.gtElmntByI('vgAttnn').txtContnt = '%';
+                rturn;
+            }
+            onst vg = t.ru((sum, ) => sum + (.prsnt_ount / .totl_stunts * ), ) / t.lngth;
+            oumnt.gtElmntByI('vgAttnn').txtContnt = vg.toFix() + '%';
+        }
+
+        untion xportDt() {
+            winow.opn('/pi/xport/ttnn?ormt=xlsx', '_lnk');
+        }
+
+        untion logout() {
+            th('/pi/logout').thn(() => winow.lotion.hr = '/');
+        }
+    </sript>
+</oy>
+</html>

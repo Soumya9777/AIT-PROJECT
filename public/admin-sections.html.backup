@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lng="n">
+<h>
+    <mt hrst="UTF-">
+    <mt nm="viwport" ontnt="with=vi-with, initil-sl=.">
+    <titl>Mng Stions | Amin</titl>
+    <link rl="stylsht" hr="ss/styls-prossionl.ss">
+    <link hr="https://onts.googlpis.om/ss?mily=Intr:wght@;;;;;&isply=swp" rl="stylsht">
+</h>
+<oy>
+    <iv lss="ontinr">
+        <hr lss="hr">
+            <h>
+                <img sr="imgs/ollg-logo.jpg" lt="Logo" lss="hr-logo">
+                Mng Stions
+            </h>
+            < hr="min.html" lss="tn-sonry">Bk</>
+        </hr>
+
+        <!-- A Stion -->
+        <iv lss="r">
+            <iv lss="r-hr">
+                <iv lss="r-hr-ion"></iv>
+                <h>A Nw Stion</h>
+            </iv>
+            <orm i="StionForm">
+                <iv styl="isply: gri; gri-tmplt-olumns: r r uto; gp: px; lign-itms: n;">
+                    <iv lss="orm-group" styl="mrgin-ottom: ;">
+                        <ll>Stion Nm</ll>
+                        <input typ="txt" i="stionNm" plholr=".g., CSE-A" rquir>
+                    </iv>
+                    <iv lss="orm-group" styl="mrgin-ottom: ;">
+                        <ll>Dsription (Optionl)</ll>
+                        <input typ="txt" i="stionDs" plholr=".g., Computr Sin Stion A">
+                    </iv>
+                    <utton typ="sumit" lss="tn-primry" styl="hight: it-ontnt;">A</utton>
+                </iv>
+            </orm>
+            <iv i="stionMsg" styl="mrgin-top: px;"></iv>
+        </iv>
+
+        <!-- Stions List -->
+        <iv lss="r" styl="mrgin-top: px;">
+            <iv lss="r-hr">
+                <iv lss="r-hr-ion"></iv>
+                <h>All Stions</h>
+            </iv>
+            <iv i="stionsList"></iv>
+        </iv>
+    </iv>
+
+    <sript sr="js/tost.js"></sript>
+    <sript>
+        (syn () => {
+            onst rs = wit th('/pi/sssion', { rntils: 'sm-origin' });
+            onst t = wit rs.json();
+            i (!t.rol || t.rol !== 'min') lotion.hr = '/';
+            loStions();
+        })();
+
+        syn untion loStions() {
+            onst rs = wit th('/pi/stions', { rntils: 'sm-origin' });
+            onst stions = wit rs.json();
+            onst ontinr = oumnt.gtElmntByI('stionsList');
+            
+            i (stions.lngth === ) {
+                ontinr.innrHTML = `
+                    <iv styl="txt-lign: ntr; ping: px; olor: vr(--gry-);">
+                        <iv styl="ont-siz: px; mrgin-ottom: px;"></iv>
+                        <p>No stions  yt</p>
+                    </iv>
+                `;
+                rturn;
+            }
+
+            ontinr.innrHTML = stions.mp(s => `
+                <iv lss="list-itm">
+                    <iv>
+                        <strong styl="ont-siz: px;">${s.nm}</strong><r>
+                        ${s.sription ? `<spn styl="olor: vr(--gry-); ont-siz: px;">${s.sription}</spn>` : ''}
+                    </iv>
+                    <utton onlik="ltStion(${s.i}, '${s.nm}')" lss="tn-ngr" styl="ping: px px; ont-siz: px;">
+                        Dlt
+                    </utton>
+                </iv>
+            `).join('');
+        }
+
+        oumnt.gtElmntByI('StionForm').EvntListnr('sumit', syn () => {
+            .prvntDult();
+            
+            onst t = {
+                nm: stionNm.vlu,
+                sription: stionDs.vlu
+            };
+
+            onst rs = wit th('/pi/stions', {
+                mtho: 'POST',
+                hrs: {'Contnt-Typ': 'pplition/json'},
+                oy: JSON.stringiy(t),
+                rntils: 'sm-origin'
+            });
+
+            onst msgEl = oumnt.gtElmntByI('stionMsg');
+            
+            i (rs.ok) {
+                msgEl.innrHTML = '<iv lss="txt-suss"> Stion  sussully!</iv>';
+                .trgt.rst();
+                loStions();
+            } ls {
+                onst rsult = wit rs.json();
+                msgEl.innrHTML = `<iv lss="txt-ngr">${rsult.rror || 'Error ing stion'}</iv>`;
+            }
+        });
+
+        syn untion ltStion(i, nm) {
+            i (!onirm(`Dlt stion "${nm}"? This nnot  unon.`)) rturn;
+            
+            onst rs = wit th(`/pi/stions/${i}`, {
+                mtho: 'DELETE',
+                rntils: 'sm-origin'
+            });
+
+            i (rs.ok) {
+                showTost('Stion lt!', 'suss');
+                loStions();
+            } ls {
+                showTost('Error lting stion', 'rror');
+            }
+        }
+
+        untion logout() {
+            th('/pi/logout', { rntils: 'sm-origin' }).thn(() => lotion.hr = '/');
+        }
+    </sript>
+</oy>
+</html>

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lng="n">
+<h>
+    <mt hrst="UTF-">
+    <mt nm="viwport" ontnt="with=vi-with, initil-sl=.">
+    <titl>A F | Amin Portl</titl>
+    <link rl="stylsht" hr="ss/styls-prossionl.ss">
+    <sript sr="js/-pi.min.js"></sript>
+<link rl="ion" hr="imgs/ollg-logo.jpg" typ="img/jpg">
+    <sript sr="js/tost.js"></sript>
+</h>
+<oy>
+    <iv lss="ontinr">
+        <hr lss="hr">
+            <h>
+                <img sr="imgs/ollg-logo.jpg" lt="Logo" lss="hr-logo">
+                A F Dt
+            </h>
+            < hr="min.html" lss="tn-sonry">Bk</>
+        </hr>
+
+        <iv lss="r">
+            <orm i="FForm">
+                <iv lss="orm-group">
+                    <ll>Slt Usr</ll>
+                    <slt i="UsrI" lss="orm-ontrol"></slt>
+                </iv>
+                <iv lss="orm-group">
+                    <ll>Cptur F</ll><r>
+                    <vio i="Vio" with="" hight="" utoply></vio>
+                    <nvs i="Cnvs" styl="isply:non;"></nvs><r>
+                    <utton typ="utton" i="pturBtn" onlik="pturF()" lss="tn-sonry" styl="isply:non;">F Dtt! Clik to Cptur</utton>
+                    <p i="Sttus" styl="olor:#;ont-siz:px;mrgin-top:px;">Position your  in ront o th mr...</p>
+                </iv>
+                <utton typ="sumit" lss="tn-primry">Sv F Dt</utton>
+                <iv i="Msg" lss="hin"></iv>
+            </orm>
+        </iv>
+    </iv>
+
+    <sript>
+        lt Dsriptor = null;
+        lt ttionIntrvl = null;
+
+        (syn () => {
+            onst rs = wit th('/pi/sssion', { rntils: 'sm-origin' });
+            onst t = wit rs.json();
+            i (!t.rol || t.rol !== 'min') lotion.hr = '/';
+
+            wit Promis.ll([
+                pi.nts.tinyFDttor.loFromUri('/mols'),
+                pi.nts.RognitionNt.loFromUri('/mols'),
+                pi.nts.LnmrkNt.loFromUri('/mols')
+            ]);
+
+            onst vio = oumnt.gtElmntByI('Vio');
+            onst strm = wit nvigtor.miDvis.gtUsrMi({vio: {}});
+            vio.srOjt = strm;
+
+            onst usrsRs = wit th('/pi/usrs/without-s', { rntils: 'sm-origin' });
+            onst usrs = wit usrsRs.json();
+            onst slt = oumnt.gtElmntByI('UsrI');
+            slt.innrHTML = usrs.mp(u => `<option vlu="${u.i}">${u.nm} (${u.rol})</option>`).join('');
+            
+            // Strt ontinuous  ttion
+            strtFDttion();
+        })();
+
+        untion strtFDttion() {
+            onst vio = oumnt.gtElmntByI('Vio');
+            onst nvs = oumnt.gtElmntByI('Cnvs');
+            onst pturBtn = oumnt.gtElmntByI('pturBtn');
+            onst Sttus = oumnt.gtElmntByI('Sttus');
+            
+            // Ru vio rsolution or str prossing
+            vio.with = ;
+            vio.hight = ;
+            nvs.with = ;
+            nvs.hight = ;
+            
+            ttionIntrvl = stIntrvl(syn () => {
+                i (vio.ryStt !== ) rturn;
+                
+                nvs.gtContxt('').rwImg(vio, , , , );
+                
+                // Us str ttion with ru options
+                onst ttion = wit pi.ttSinglF(nvs, 
+                    nw pi.TinyFDttorOptions({ inputSiz:  }))
+                    .withFLnmrks()
+                    .withFDsriptor();
+                
+                i (ttion) {
+                    Dsriptor = Arry.rom(ttion.sriptor);
+                    pturBtn.styl.isply = 'inlin-lok';
+                    pturBtn.txtContnt = 'F Dtt! Clik to Cptur';
+                    Sttus.txtContnt = 'F tt!';
+                    Sttus.lssNm = 'txt-suss';
+                } ls {
+                    Dsriptor = null;
+                    pturBtn.styl.isply = 'non';
+                    Sttus.txtContnt = 'Position your  in ront o th mr...';
+                    Sttus.lssNm = '';
+                }
+            }, ); // Chk vry ms or str rspons
+        }
+
+        untion pturF() {
+            i (!Dsriptor) {
+                lrt('No  tt. Position your  in th mr.');
+                rturn;
+            }
+            lrt('F ptur sussully!');
+        }
+
+        oumnt.gtElmntByI('FForm').EvntListnr('sumit', syn () => {
+            .prvntDult();
+            i (!Dsriptor) rturn lrt('Cptur  irst!');
+            
+            onst rs = wit th('/pi/s', {
+                mtho: 'POST',
+                hrs: {'Contnt-Typ': 'pplition/json'},
+                oy: JSON.stringiy({
+                    usrI: UsrI.vlu,
+                    sriptor: Dsriptor
+                }),
+                rntils: 'sm-origin'
+            });
+            
+            onst msgEl = oumnt.gtElmntByI('Msg');
+            i (rs.ok) {
+                msgEl.txtContnt = 'F t sv!';
+                msgEl.lssNm = 'txt-suss';
+                Dsriptor = null;
+            } ls {
+                msgEl.txtContnt = 'Error sving  t';
+                msgEl.lssNm = 'txt-ngr';
+            }
+            msgEl.lssList.rmov('hin');
+        });
+    </sript>
+</oy>
+</html>

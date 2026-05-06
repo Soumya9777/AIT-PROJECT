@@ -1,0 +1,20 @@
+# Remove emoji icons from class attributes and text
+s/👥/Users/g
+s/📚/Subj/g
+s/📊/Sess/g
+s/✓/✓/g
+s/🔔/🔔/g
+s/👤/Profile/g
+s/⚙️/Settings/g
+s/➕/Add/g
+s/📈/Anal/g
+s/✏️/Edit/g
+s/📋/Logs/g
+s/📥/Upload/g
+s/📷/Face/g
+s/📍/Loc/g
+s/⏳/Wait/g
+s/📱/Scan/g
+s/🎓/AIT/g
+s/📄/Report/g
+s/📊/Stats/g

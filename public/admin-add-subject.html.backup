@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lng="n">
+<h>
+    <mt hrst="UTF-">
+    <mt nm="viwport" ontnt="with=vi-with, initil-sl=.">
+    <titl>A Sujt | Amin Portl</titl>
+    <link rl="stylsht" hr="ss/styls-prossionl.ss">
+<link rl="ion" hr="imgs/ollg-logo.jpg" typ="img/jpg">
+    <sript sr="js/tost.js"></sript>
+</h>
+<oy>
+    <iv lss="ontinr">
+        <hr lss="hr">
+            <h>
+                <img sr="imgs/ollg-logo.jpg" lt="Logo" lss="hr-logo">
+                A Sujt
+            </h>
+            < hr="min.html" lss="tn-sonry">Bk</>
+        </hr>
+
+        <iv lss="r">
+            <orm i="SujtForm">
+                <iv lss="orm-group">
+                    <ll>Sujt Nm</ll>
+                    <input typ="txt" i="sujtNm" rquir>
+                </iv>
+                <utton typ="sumit" lss="tn-primry">A Sujt</utton>
+                <iv i="sujtMsg" lss="hin"></iv>
+            </orm>
+        </iv>
+
+        <iv lss="r" styl="mrgin-top: px;">
+            <h>Avill Sujts</h>
+            <iv i="sujtsList"></iv>
+        </iv>
+    </iv>
+
+    <sript>
+        syn untion loSujts() {
+            onst rs = wit th('/pi/sujts', { rntils: 'sm-origin' });
+            onst sujts = wit rs.json();
+            oumnt.gtElmntByI('sujtsList').innrHTML = 
+                sujts.mp(s => `<iv lss="r" styl="ping:px;mrgin:px ">${s.nm}</iv>`).join('');
+        }
+
+        oumnt.gtElmntByI('SujtForm').EvntListnr('sumit', syn () => {
+            .prvntDult();
+            onst rs = wit th('/pi/sujts', {
+                mtho: 'POST',
+                hrs: {'Contnt-Typ': 'pplition/json'},
+                oy: JSON.stringiy({nm: sujtNm.vlu}),
+                rntils: 'sm-origin'
+            });
+            
+            onst msgEl = oumnt.gtElmntByI('sujtMsg');
+            i (rs.ok) {
+                msgEl.txtContnt = 'Sujt !';
+                msgEl.lssNm = 'txt-suss';
+                .trgt.rst();
+                loSujts();
+            } ls {
+                msgEl.txtContnt = 'Error ing sujt';
+                msgEl.lssNm = 'txt-ngr';
+            }
+            msgEl.lssList.rmov('hin');
+        });
+
+        (syn () => {
+            onst rs = wit th('/pi/sssion', { rntils: 'sm-origin' });
+            onst t = wit rs.json();
+            i (!t.rol || t.rol !== 'min') lotion.hr = '/';
+            loSujts();
+        })();
+    </sript>
+</oy>
+</html>

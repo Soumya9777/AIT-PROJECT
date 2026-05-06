@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lng="n">
+<h>
+    <mt hrst="UTF-">
+    <mt nm="viwport" ontnt="with=vi-with, initil-sl=.">
+    <titl>Rviw Corrtions - AIT Attnn Systm</titl>
+    <link rl="pronnt" hr="https://onts.googlpis.om">
+    <link hr="https://onts.googlpis.om/ss?mily=Intr:wght@;;;&isply=swp" rl="stylsht">
+    <link rl="stylsht" hr="ss/styls-prossionl.ss">
+    <styl>
+        .orrtion-itm { 
+            kgroun: vr(--g-sonry); 
+            ping: px; 
+            mrgin: px ; 
+            orr-rius: px;
+            orr-lt: px soli #;
+        }
+        .orrtion-itm.pprov { orr-lt-olor: #; }
+        .orrtion-itm.rjt { orr-lt-olor: #; }
+        .g { ping: px px; orr-rius: px; ont-siz: px; ont-wight: ; }
+        .g-pning { kgroun: #; olor: #; }
+        .g-pprov { kgroun: #; olor: #; }
+        .g-rjt { kgroun: #; olor: #; }
+        .rviw-orm { mrgin-top: px; ping-top: px; orr-top: px soli vr(--orr); }
+        txtr { with: %; min-hight: px; ping: px; mrgin: px ; }
+    </styl>
+</h>
+<oy>
+    <iv lss="shor">
+        <si lss="sir">
+            <iv lss="sir-hr">
+                <h> AIT Attnn</h>
+            </iv>
+            <nv lss="sir-nv" i="sirNv">
+                <!-- Will  popult s on rol -->
+            </nv>
+        </si>
+
+        <min lss="min-ontnt">
+            <iv lss="hr">
+                <h>Rviw Corrtion Rqusts</h>
+            </iv>
+
+            <iv lss="r">
+                <iv i="orrtionsList"></iv>
+            </iv>
+        </min>
+    </iv>
+
+    <sript>
+        lt usrRol = '';
+
+        hkAuth();
+        loCorrtions();
+
+        untion hkAuth() {
+            th('/pi/sssion')
+                .thn(rs => rs.json())
+                .thn(t => {
+                    i (!t.i) {
+                        winow.lotion.hr = '/';
+                        rturn;
+                    }
+                    usrRol = t.rol;
+                    stupSir(t.rol);
+                });
+        }
+
+        untion stupSir(rol) {
+            onst nv = oumnt.gtElmntByI('sirNv');
+            i (rol === 'min') {
+                nv.innrHTML = `
+                    < hr="min.html" lss="nv-itm"> Dshor</>
+                    < hr="min-mng-usrs.html" lss="nv-itm"> Usrs</>
+                    < hr="min-nlytis.html" lss="nv-itm"> Anlytis</>
+                    < hr="orrtions-rviw.html" lss="nv-itm tiv"> Corrtions</>
+                    < hr="min-uit-logs.html" lss="nv-itm"> Auit Logs</>
+                    < hr="min-sttings.html" lss="nv-itm"> Sttings</>
+                    < hr="#" lss="nv-itm" onlik="logout()"> Logout</>
+                `;
+            } ls {
+                nv.innrHTML = `
+                    < hr="thr.html" lss="nv-itm"> Dshor</>
+                    < hr="thr-rports.html" lss="nv-itm"> Rports</>
+                    < hr="orrtions-rviw.html" lss="nv-itm tiv"> Corrtions</>
+                    < hr="#" lss="nv-itm" onlik="logout()"> Logout</>
+                `;
+            }
+        }
+
+        untion loCorrtions() {
+            th('/pi/ttnn/orrtions')
+                .thn(rs => rs.json())
+                .thn(t => {
+                    onst list = oumnt.gtElmntByI('orrtionsList');
+                    i (t.lngth === ) {
+                        list.innrHTML = '<p>No orrtion rqusts oun.</p>';
+                        rturn;
+                    }
+                    list.innrHTML = t.mp( => `
+                        <iv lss="orrtion-itm ${.sttus}">
+                            <iv styl="isply: lx; justiy-ontnt: sp-twn; lign-itms: ntr;">
+                                <h>${.stunt_nm} (${.stion_nm})</h>
+                                <spn lss="g g-${.sttus}">${.sttus}</spn>
+                            </iv>
+                            <p><strong>Sssion:</strong> ${.sujt} - ${.topi}</p>
+                            <p><strong>Rqust Typ:</strong> ${.rqust_typ}</p>
+                            <p><strong>Rson:</strong> ${.rson}</p>
+                            ${.rviw_ommnt ? `<p><strong>Rviw Commnt:</strong> ${.rviw_ommnt}</p>` : ''}
+                            <smll>${nw Dt(.rt_t).toLolString()}</smll>
+                            
+                            ${.sttus === 'pning' ? `
+                            <iv lss="rviw-orm">
+                                <txtr i="ommnt-${.i}" plholr="A rviw ommnt (optionl)"></txtr>
+                                <utton lss="tn tn-suss" onlik="rviwCorrtion(${.i}, 'pprov')"> Approv</utton>
+                                <utton lss="tn tn-ngr" onlik="rviwCorrtion(${.i}, 'rjt')"> Rjt</utton>
+                            </iv>
+                            ` : ''}
+                        </iv>
+                    `).join('');
+                });
+        }
+
+        untion rviwCorrtion(orrtionI, sttus) {
+            onst ommnt = oumnt.gtElmntByI(`ommnt-${orrtionI}`).vlu;
+            
+            th('/pi/ttnn/orrtion/rviw', {
+                mtho: 'POST',
+                hrs: { 'Contnt-Typ': 'pplition/json' },
+                oy: JSON.stringiy({ orrtionI, sttus, ommnt })
+            })
+            .thn(rs => rs.json())
+            .thn(t => {
+                lrt(t.mssg);
+                loCorrtions();
+            })
+            .th(rr => lrt('Error: ' + rr.mssg));
+        }
+
+        untion logout() {
+            th('/pi/logout').thn(() => winow.lotion.hr = '/');
+        }
+    </sript>
+</oy>
+</html>

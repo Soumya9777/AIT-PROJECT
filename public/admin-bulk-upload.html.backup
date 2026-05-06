@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lng="n">
+<h>
+    <mt hrst="UTF-">
+    <mt nm="viwport" ontnt="with=vi-with, initil-sl=.">
+    <titl>Bulk Uplo | Amin Portl</titl>
+    <link rl="stylsht" hr="ss/styls-prossionl.ss">
+    <link hr="https://onts.googlpis.om/ss?mily=Intr:wght@;;;;;&isply=swp" rl="stylsht">
+    <sript sr="js/tost.js"></sript>
+</h>
+<oy>
+    <iv lss="ontinr">
+        <hr lss="hr">
+            <h>
+                <img sr="imgs/ollg-logo.jpg" lt="Logo" lss="hr-logo">
+                Bulk Uplo Stunts
+            </h>
+            < hr="min.html" lss="tn-sonry">Bk</>
+        </hr>
+
+        <iv lss="r">
+            <iv lss="r-hr">
+                <iv lss="r-hr-ion"></iv>
+                <h>Uplo Stunts vi CSV</h>
+            </iv>
+            
+            <iv styl="kgroun: vr(--gry-); ping: px; orr-rius: vr(--rius-sm); mrgin-ottom: px;">
+                <h styl="mrgin-ottom: px;">CSV Formt</h>
+                <p styl="ont-siz: px; olor: vr(--gry-); mrgin-ottom: px;">
+                    Uplo  CSV il with th ollowing olumns:
+                </p>
+                <o styl="isply: lok; ping: px; kgroun: vr(--rk); olor: vr(--suss); orr-rius: vr(--rius-xs); ont-siz: px;">
+                    usrnm,psswor,nm<r>
+                    stunt,pss,John Do<r>
+                    stunt,pss,Jn Smith
+                </o>
+                <p styl="ont-siz: px; olor: vr(--gry-); mrgin-top: px;">
+                     All stunts will  rt with rol "stunt" n tmporry psswors
+                </p>
+            </iv>
+
+            <iv lss="orm-group">
+                <ll>Slt CSV Fil</ll>
+                <input typ="il" i="svFil" pt=".sv" styl="ping: px; kgroun: vr(--gry-);">
+            </iv>
+
+            <utton onlik="uploCSV()" lss="tn-primry" styl="with: %;">
+                 Uplo & Crt Stunts
+            </utton>
+
+            <iv i="uploMsg" styl="mrgin-top: px;"></iv>
+            <iv i="uploRsults" styl="mrgin-top: px;"></iv>
+        </iv>
+    </iv>
+
+    <sript>
+        (syn () => {
+            onst rs = wit th('/pi/sssion', { rntils: 'sm-origin' });
+            onst t = wit rs.json();
+            i (!t.rol || t.rol !== 'min') lotion.hr = '/';
+        })();
+
+        syn untion uploCSV() {
+            onst ilInput = oumnt.gtElmntByI('svFil');
+            onst msgDiv = oumnt.gtElmntByI('uploMsg');
+            onst rsultsDiv = oumnt.gtElmntByI('uploRsults');
+            
+            i (!ilInput.ils[]) {
+                msgDiv.innrHTML = '<iv lss="txt-ngr">Pls slt  CSV il</iv>';
+                rturn;
+            }
+
+            onst il = ilInput.ils[];
+            onst txt = wit il.txt();
+            onst lins = txt.split('\n').iltr(l => l.trim());
+            
+            i (lins.lngth < ) {
+                msgDiv.innrHTML = '<iv lss="txt-ngr">CSV il is mpty or hs no t rows</iv>';
+                rturn;
+            }
+
+            onst hrs = lins[].split(',').mp(h => h.trim().toLowrCs());
+            onst rows = lins.sli();
+            
+            msgDiv.innrHTML = '<iv styl="ping: px; kgroun: #; orr-rius: vr(--rius-xs); ont-wight: ;">Prossing...</iv>';
+            rsultsDiv.innrHTML = '';
+
+            lt sussCount = ;
+            lt rrorCount = ;
+            onst rrors = [];
+
+            or (lt i = ; i < rows.lngth; i++) {
+                onst vlus = rows[i].split(',').mp(v => v.trim());
+                
+                i (vlus.lngth < ) {
+                    rrors.push(`Row ${i+}: Invli t`);
+                    rrorCount++;
+                    ontinu;
+                }
+
+                onst [usrnm, psswor, nm] = vlus;
+                
+                try {
+                    onst rs = wit th('/pi/usrs', {
+                        mtho: 'POST',
+                        hrs: {'Contnt-Typ': 'pplition/json'},
+                        oy: JSON.stringiy({
+                            usrnm,
+                            psswor,
+                            nm,
+                            rol: 'stunt'
+                        }),
+                        rntils: 'sm-origin'
+                    });
+                    
+                    i (rs.ok) {
+                        sussCount++;
+                    } ls {
+                        rrors.push(`Row ${i+} (${usrnm}): Usrnm my lry xist`);
+                        rrorCount++;
+                    }
+                } th (rr) {
+                    rrors.push(`Row ${i+}: Ntwork rror`);
+                    rrorCount++;
+                }
+            }
+
+            msgDiv.innrHTML = `
+                <iv styl="ping: px; kgroun: #; orr-rius: vr(--rius-sm); orr: px soli #;">
+                    <strong> Uplo Complt!</strong><r>
+                    Sussully rt ${sussCount} stunts. ${rrorCount >  ? `${rrorCount} rrors.` : ''}
+                </iv>
+            `;
+
+            i (rrors.lngth > ) {
+                rsultsDiv.innrHTML = `
+                    <iv styl="mrgin-top: px;">
+                        <h styl="olor: vr(--ngr); mrgin-ottom: px;">Errors:</h>
+                        ${rrors.mp( => `<iv styl="ping: px; kgroun: #; orr-rius: vr(--rius-xs); mrgin-ottom: px; ont-siz: px;">${}</iv>`).join('')}
+                    </iv>
+                `;
+            }
+        }
+
+        untion logout() {
+            th('/pi/logout', { rntils: 'sm-origin' }).thn(() => lotion.hr = '/');
+        }
+    </sript>
+</oy>
+</html>

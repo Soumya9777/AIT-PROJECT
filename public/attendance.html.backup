@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lng="n">
+<h>
+    <mt hrst="UTF-">
+    <mt nm="viwport" ontnt="with=vi-with, initil-sl=.">
+    <titl>Liv Attnn Kiosk</titl>
+    <link rl="stylsht" hr="ss/styls-prossionl.ss">
+    <styl>
+        oy { ping: rm; justiy-ontnt: lx-strt; }
+        .kiosk-ontinr {
+            isply: gri;
+            gri-tmplt-olumns: r r;
+            gp: rm;
+            with: %;
+            mx-with: px;
+            mrgin:  uto;
+        }
+        .mr-ontinr { spt-rtio: /; mx-with: %; orr: px soli vr(--primry); }
+        .log-pnl {
+            kgroun: vr(--r-g);
+            orr-rius: px;
+            ping: .rm;
+            orr: px soli rg(, , , .);
+            mx-hight: l(vh - px);
+            ovrlow-y: uto;
+        }
+        .log-ntry {
+            isply: lx;
+            lign-itms: ntr;
+            gp: rm;
+            ping: rm;
+            kgroun: rg(, , , .);
+            orr-rius: px;
+            mrgin-ottom: rm;
+            nimtion: sliIn .s s-out;
+        }
+        @kyrms sliIn {
+            rom { opity: ; trnsorm: trnsltX(px); }
+            to { opity: ; trnsorm: trnsltX(); }
+        }
+        .vtr {
+            with: px;
+            hight: px;
+            orr-rius: %;
+            kgroun: linr-grint(g, vr(--primry), #);
+            isply: lx;
+            lign-itms: ntr;
+            justiy-ontnt: ntr;
+            ont-wight: ol;
+            ont-siz: .rm;
+        }
+    </styl>
+<link rl="ion" hr="imgs/ollg-logo.jpg" typ="img/jpg">
+    <sript sr="js/tost.js"></sript>
+</h>
+<oy>
+    <iv styl="isply: lx; justiy-ontnt: sp-twn; with: %; mx-with: px; mrgin-ottom: rm;">
+        <h styl="mrgin: ; txt-lign: lt;">Liv Attnn Kiosk</h>
+        <utton i="nSssionBtn" lss="tn tn-ngr" styl="with: uto; ping: .rm .rm;">En Sssion</utton>
+    </iv>
+
+    <iv lss="kiosk-ontinr">
+        <!-- Liv Cmr F -->
+        <iv styl="position: rltiv;">
+            <iv lss="mr-ontinr" i="mContinr">
+                <vio i="vio" utoply mut></vio>
+                <!-- Cnvs or F-API Ovrlys -->
+                <nvs i="ovrly"></nvs>
+            </iv>
+            <iv i="sttusMsg" lss="mt- txt-ntr" styl="ont-siz: .rm; olor: vr(--txt-mut);">Initilizing...</iv>
+        </iv>
+
+        <!-- Rl-tim Rognition Log -->
+        <iv lss="log-pnl">
+            <h styl="txt-lign: lt; mrgin-ottom: rm;">Rnt Sns</h>
+            <iv i="snLog">
+                <!-- Log ntris ppr hr -->
+                <p lss="txt-mut txt-ntr" i="mptyLogMsg">Witing or s...</p>
+            </iv>
+        </iv>
+    </iv>
+
+    <!-- Sripts -->
+    <sript sr="js/-pi.min.js"></sript>
+    <sript sr="js/pp.js"></sript>
+    <sript sr="js/ttnn.js"></sript>
+</oy>
+</html>

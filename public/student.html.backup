@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lng="n">
+<h>
+    <mt hrst="UTF-">
+    <mt nm="viwport" ontnt="with=vi-with, initil-sl=.">
+    <titl>Stunt Portl | Smrt Attnn</titl>
+    <link rl="stylsht" hr="ss/styls-prossionl.ss">
+    <link hr="https://onts.googlpis.om/ss?mily=Intr:wght@;;;;;&isply=swp" rl="stylsht">
+<link rl="ion" hr="imgs/ollg-logo.jpg" typ="img/jpg">
+    <sript sr="js/tost.js"></sript>
+</h>
+<oy>
+    <iv lss="ontinr">
+        <hr lss="hr">
+            <h i="wlomHr">
+                <img sr="imgs/ollg-logo.jpg" lt="Logo" lss="hr-logo">
+                Stunt Portl
+            </h>
+            <iv styl="isply: lx; gp: px; lign-itms: ntr;">
+                <iv styl="position: rltiv;">
+                    <utton onlik="togglNotiitions()" lss="tn-sonry" i="notiBtn"> <spn i="notiCount" styl="isply:non; kgroun: r; olor: whit; orr-rius: %; ping: px px; ont-siz: px; position: solut; top: -px; right: -px;"></spn></utton>
+                    <iv i="notiDropown" styl="isply:non; position: solut; right: ; top: %; kgroun: vr(--g-primry); orr: px soli vr(--orr); orr-rius: px; with: px; mx-hight: px; ovrlow-y: uto; z-inx: ; ox-show:  px px rg(,,,.);">
+                        <iv styl="ping: px; orr-ottom: px soli vr(--orr); isply: lx; justiy-ontnt: sp-twn; lign-itms: ntr;">
+                            <strong>Notiitions</strong>
+                            <utton onlik="rAllNotiitions()" styl="kgroun: non; orr: non; olor: vr(--primry); ursor: pointr; ont-siz: px;">Mrk ll r</utton>
+                        </iv>
+                        <iv i="notiList"></iv>
+                    </iv>
+                </iv>
+                < hr="proil.html" lss="tn-sonry" styl="txt-ortion: non;"> Proil</>
+                <utton onlik="logout()" lss="tn-sonry">Logout</utton>
+            </iv>
+        </hr>
+
+        <!-- Ovrll Attnn Prntg -->
+        <iv i="ttnnPrntg">
+            <iv lss="prntg-isply">
+                <iv i="ovrllPrntg" lss="prntg-numr">%</iv>
+                <iv i="ovrllDtils" lss="prntg-ll">Loing...</iv>
+            </iv>
+            
+            <!-- Attnn Visuliztion -->
+            <iv lss="r" styl="mrgin-top: px;">
+                <iv lss="r-hr">
+                    <iv lss="r-hr-ion"></iv>
+                    <h>Attnn Visuliztion</h>
+                </iv>
+                <iv i="ttnnChrt" styl="ping: px;"></iv>
+            </iv>
+            
+            <!-- Sujt-wis Prntgs -->
+            <iv lss="r" styl="mrgin-top: px;">
+                <iv lss="r-hr">
+                    <iv lss="r-hr-ion"></iv>
+                    <h>Attnn y Sujt</h>
+                </iv>
+                <iv i="sujtPrntgs"></iv>
+            </iv>
+        </iv>
+
+        <!-- Quik Ation -->
+        <iv lss="r" styl="txt-lign: ntr; ping: px;">
+            <iv styl="ont-siz: px; mrgin-ottom: px;"></iv>
+            <h styl="mrgin-ottom: px;">Mrk Your Attnn</h>
+            <p styl="olor: vr(--gry-); mrgin-ottom: px;">
+                Sn th QR o shown y your thr to mrk ttnn
+            </p>
+            < hr="sn.html" lss="tn-primry" styl="txt-ortion: non; ont-siz: px; ping: px px;">
+                 Sn & Mrk Attnn
+            </>
+        </iv>
+
+        <!-- Quik Links -->
+        <iv styl="mrgin-top: px; isply: lx; gp: px; lx-wrp: wrp; justiy-ontnt: ntr;">
+            < hr="ttnn-orrtion.html" lss="tn-sonry" styl="txt-ortion: non;">
+                 Rqust Corrtion
+            </>
+            < hr="/pi/xport/ttnn?ormt=xlsx" lss="tn-sonry" styl="txt-ortion: non;">
+                 Export My Dt
+            </>
+        </iv>
+
+        <!-- Attnn Rors -->
+        <iv lss="r" styl="mrgin-top: px;">
+            <iv lss="r-hr">
+                <iv lss="r-hr-ion"></iv>
+                <h>Rnt Attnn Rors</h>
+            </iv>
+            <iv i="ttnnList"></iv>
+        </iv>
+    </iv>
+
+    <sript sr="js/stunt.js"></sript>
+    <sript>
+        // Notiition systm
+        lt notiOpn = ls;
+        
+        untion togglNotiitions() {
+            onst ropown = oumnt.gtElmntByI('notiDropown');
+            notiOpn = !notiOpn;
+            ropown.styl.isply = notiOpn ? 'lok' : 'non';
+            i (notiOpn) loNotiitions();
+        }
+
+        untion loNotiitions() {
+            th('/pi/notiitions', { rntils: 'sm-origin' })
+                .thn(rs => rs.json())
+                .thn(t => {
+                    onst list = oumnt.gtElmntByI('notiList');
+                    i (t.lngth === ) {
+                        list.innrHTML = '<iv styl="ping: px; txt-lign: ntr; olor: vr(--txt-sonry);">No notiitions</iv>';
+                        rturn;
+                    }
+                    list.innrHTML = t.mp(n => `
+                        <iv styl="ping: px; orr-ottom: px soli vr(--orr); kgroun: ${n.is_r ? 'trnsprnt' : 'vr(--g-sonry)'}; ursor: pointr;" onlik="rNotiition(${n.i})">
+                            <iv styl="ont-wight: ${n.is_r ? 'norml' : ''}; ont-siz: px;">${n.titl}</iv>
+                            <iv styl="ont-siz: px; olor: vr(--txt-sonry); mrgin-top: px;">${n.mssg}</iv>
+                            <iv styl="ont-siz: px; olor: vr(--txt-sonry); mrgin-top: px;">${nw Dt(n.rt_t).toLolString()}</iv>
+                        </iv>
+                    `).join('');
+                });
+        }
+
+        untion rNotiition(i) {
+            th('/pi/notiitions/r', {
+                mtho: 'POST',
+                hrs: { 'Contnt-Typ': 'pplition/json' },
+                rntils: 'sm-origin',
+                oy: JSON.stringiy({ notiitionI: i })
+            }).thn(() => {
+                loNotiitions();
+                uptNotiCount();
+            });
+        }
+
+        untion rAllNotiitions() {
+            th('/pi/notiitions/r-ll', {
+                mtho: 'POST',
+                rntils: 'sm-origin'
+            }).thn(() => {
+                loNotiitions();
+                uptNotiCount();
+            });
+        }
+
+        untion uptNotiCount() {
+            th('/pi/notiitions/unr-ount', { rntils: 'sm-origin' })
+                .thn(rs => rs.json())
+                .thn(t => {
+                    onst ountEl = oumnt.gtElmntByI('notiCount');
+                    i (t.ount > ) {
+                        ountEl.txtContnt = t.ount;
+                        ountEl.styl.isply = 'lok';
+                    } ls {
+                        ountEl.styl.isply = 'non';
+                    }
+                });
+        }
+
+        // Upt notiition ount on pg lo
+        stTimout(uptNotiCount, );
+        
+        // Clos ropown whn liking outsi
+        oumnt.EvntListnr('lik', () => {
+            i (!.trgt.losst('#notiBtn') && !.trgt.losst('#notiDropown')) {
+                oumnt.gtElmntByI('notiDropown').styl.isply = 'non';
+                notiOpn = ls;
+            }
+        });
+    </sript>
+</oy>
+</html>

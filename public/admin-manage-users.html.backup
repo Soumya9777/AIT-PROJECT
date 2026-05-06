@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lng="n">
+<h>
+    <mt hrst="UTF-">
+    <mt nm="viwport" ontnt="with=vi-with, initil-sl=.">
+    <titl>Mng Usrs | Amin Portl</titl>
+    <link rl="stylsht" hr="ss/styls-prossionl.ss">
+<link rl="ion" hr="imgs/ollg-logo.jpg" typ="img/jpg">
+    <sript sr="js/tost.js"></sript>
+</h>
+<oy>
+    <iv lss="ontinr">
+        <hr lss="hr">
+            <h>
+                <img sr="imgs/ollg-logo.jpg" lt="Logo" lss="hr-logo">
+                Mng Usrs
+            </h>
+            < hr="min.html" lss="tn-sonry">Bk</>
+        </hr>
+
+        <iv lss="r">
+            <iv lss="r-hr">
+                <iv lss="r-hr-ion"></iv>
+                <h>All Usrs</h>
+            </iv>
+            <iv styl="mrgin-ottom: px;">
+                <input typ="txt" i="srhUsr" plholr=" Srh y nm, usrnm, or rol..." 
+                    styl="with: %; ping: px px; orr: px soli vr(--gry-); orr-rius: vr(--rius-sm); ont-siz: px;"
+                    onkyup="iltrUsrs()">
+            </iv>
+            <iv i="usrsList"></iv>
+        </iv>
+    </iv>
+
+    <sript>
+        syn untion loUsrs() {
+            onst rs = wit th('/pi/usrs', { rntils: 'sm-origin' });
+            onst usrs = wit rs.json();
+            oumnt.gtElmntByI('usrsList').innrHTML = usrs.mp(u => `
+                <iv lss="r" styl="ping:px;mrgin:px ; isply: lx; justiy-ontnt: sp-twn; lign-itms: ntr;">
+                    <iv>
+                        <strong>${u.nm}</strong> (@${u.usrnm})<r>
+                        <smll styl="olor: #;">${u.rol}</smll>
+                    </iv>
+                    <iv styl="isply: lx; gp: px;">
+                        <utton onlik="rstPsswor(${u.i})" lss="tn-sonry" styl="ping: px px; ont-siz: px;">Rst PW</utton>
+                        <utton onlik="ltUsr(${u.i}, '${u.nm}')" lss="tn-sonry" styl="ping: px px; ont-siz: px; kgroun: #; olor: whit;">Dlt</utton>
+                    </iv>
+                </iv>
+            `).join('');
+        }
+
+        syn untion rstPsswor(usrI) {
+            onst nwTmpPsswor = prompt('Entr nw tmporry psswor:');
+            i (!nwTmpPsswor) rturn;
+            
+            onst rs = wit th('/pi/usrs/rst-psswor', {
+                mtho: 'POST',
+                hrs: {'Contnt-Typ': 'pplition/json'},
+                oy: JSON.stringiy({usrI, nwTmpPsswor}),
+                rntils: 'sm-origin'
+            });
+            
+            i (rs.ok) {
+                lrt(`Psswor rst! Nw tmp psswor: ${nwTmpPsswor}`);
+                loUsrs();
+            } ls {
+                lrt('Error rstting psswor');
+            }
+        }
+
+        syn untion ltUsr(usrI, usrNm) {
+            i (!onirm(`Dlt usr "${usrNm}"? This nnot  unon.`)) rturn;
+            
+            onst rs = wit th(`/pi/usrs/${usrI}`, { 
+                mtho: 'DELETE',
+                rntils: 'sm-origin'
+            });
+            
+            i (rs.ok) {
+                lrt('Usr lt!');
+                loUsrs();
+            } ls {
+                lrt('Error lting usr');
+            }
+        }
+
+        (syn () => {
+            onst rs = wit th('/pi/sssion', { rntils: 'sm-origin' });
+            onst t = wit rs.json();
+            i (!t.rol || t.rol !== 'min') lotion.hr = '/';
+            loUsrs();
+        })();
+    </sript>
+</oy>
+</html>

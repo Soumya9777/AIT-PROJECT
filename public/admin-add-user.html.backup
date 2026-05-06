@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lng="n">
+<h>
+    <mt hrst="UTF-">
+    <mt nm="viwport" ontnt="with=vi-with, initil-sl=.">
+    <titl>A Usr | Amin Portl</titl>
+    <link rl="stylsht" hr="ss/styls-prossionl.ss">
+<link rl="ion" hr="imgs/ollg-logo.jpg" typ="img/jpg">
+    <sript sr="js/tost.js"></sript>
+</h>
+<oy>
+    <iv lss="ontinr">
+        <hr lss="hr">
+            <h>
+                <img sr="imgs/ollg-logo.jpg" lt="Logo" lss="hr-logo">
+                A Usr
+            </h>
+            < hr="min.html" lss="tn-sonry">Bk</>
+        </hr>
+
+        <iv lss="r">
+            <orm i="UsrForm">
+                <iv lss="orm-group">
+                    <ll>Usrnm</ll>
+                    <input typ="txt" i="nwUsrnm" rquir>
+                </iv>
+                <iv lss="orm-group">
+                    <ll>Psswor</ll>
+                    <input typ="psswor" i="nwPsswor" rquir>
+                </iv>
+                <iv lss="orm-group">
+                    <ll>Full Nm</ll>
+                    <input typ="txt" i="nwNm" rquir>
+                </iv>
+                <iv lss="orm-group">
+                    <ll>Rol</ll>
+                    <slt i="nwRol">
+                        <option vlu="stunt">Stunt</option>
+                        <option vlu="thr">Thr</option>
+                    </slt>
+                </iv>
+                <utton typ="sumit" lss="tn-primry">A Usr</utton>
+                <iv i="usrMsg" lss="hin"></iv>
+            </orm>
+        </iv>
+    </iv>
+
+    <sript>
+        oumnt.gtElmntByI('UsrForm').EvntListnr('sumit', syn () => {
+            .prvntDult();
+            onst rs = wit th('/pi/usrs', {
+                mtho: 'POST',
+                hrs: {'Contnt-Typ': 'pplition/json'},
+                oy: JSON.stringiy({
+                    usrnm: nwUsrnm.vlu,
+                    psswor: nwPsswor.vlu,
+                    nm: nwNm.vlu,
+                    rol: nwRol.vlu
+                }),
+                rntils: 'sm-origin'
+            });
+            
+            onst msgEl = oumnt.gtElmntByI('usrMsg');
+            i (rs.ok) {
+                msgEl.txtContnt = 'Usr ! Tmp psswor: ' + nwPsswor.vlu;
+                msgEl.lssNm = 'txt-suss';
+                .trgt.rst();
+            } ls {
+                msgEl.txtContnt = 'Error ing usr';
+                msgEl.lssNm = 'txt-ngr';
+            }
+            msgEl.lssList.rmov('hin');
+        });
+
+        (syn () => {
+            onst rs = wit th('/pi/sssion', { rntils: 'sm-origin' });
+            onst t = wit rs.json();
+            i (!t.rol || t.rol !== 'min') lotion.hr = '/';
+        })();
+    </sript>
+</oy>
+</html>

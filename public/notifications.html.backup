@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lng="n">
+<h>
+    <mt hrst="UTF-">
+    <mt nm="viwport" ontnt="with=vi-with, initil-sl=.">
+    <titl>Notiitions - AIT Attnn Systm</titl>
+    <link rl="pronnt" hr="https://onts.googlpis.om">
+    <link hr="https://onts.googlpis.om/ss?mily=Intr:wght@;;;&isply=swp" rl="stylsht">
+    <link rl="stylsht" hr="ss/styls-prossionl.ss">
+    <styl>
+        .noti-itm { 
+            kgroun: vr(--g-sonry); 
+            ping: px; 
+            mrgin: px ; 
+            orr-rius: px;
+            orr-lt: px soli vr(--primry);
+            ursor: pointr;
+            trnsition: trnsorm .s;
+        }
+        .noti-itm:hovr { trnsorm: trnsltX(px); }
+        .noti-itm.unr { kgroun: vr(--g-primry); orr-lt-olor: vr(--primry); ont-wight: ; }
+        .noti-itm.r { opity: .; }
+        .noti-typ-ino { orr-lt-olor: #; }
+        .noti-typ-suss { orr-lt-olor: #; }
+        .noti-typ-wrning { orr-lt-olor: #; }
+        .noti-typ-rror { orr-lt-olor: #; }
+    </styl>
+</h>
+<oy>
+    <iv lss="shor">
+        <si lss="sir">
+            <iv lss="sir-hr">
+                <h> AIT Attnn</h>
+            </iv>
+            <nv lss="sir-nv" i="sirNv">
+                <!-- Popult s on rol -->
+            </nv>
+        </si>
+
+        <min lss="min-ontnt">
+            <iv lss="hr">
+                <h>Notiitions</h>
+                <iv styl="isply: lx; gp: px;">
+                    <utton lss="tn tn-sonry" onlik="rAll()">Mrk All R</utton>
+                    <utton lss="tn tn-primry" onlik="loNotiitions()"> Rrsh</utton>
+                </iv>
+            </iv>
+
+            <iv lss="r">
+                <iv i="notiList"></iv>
+            </iv>
+        </min>
+    </iv>
+
+    <sript>
+        lt usrRol = '';
+        lt usrI = '';
+
+        hkAuth();
+        loNotiitions();
+
+        untion hkAuth() {
+            th('/pi/sssion')
+                .thn(rs => rs.json())
+                .thn(t => {
+                    i (!t.i) {
+                        winow.lotion.hr = '/';
+                        rturn;
+                    }
+                    usrRol = t.rol;
+                    usrI = t.i;
+                    stupSir(t.rol);
+                });
+        }
+
+        untion stupSir(rol) {
+            onst nv = oumnt.gtElmntByI('sirNv');
+            i (rol === 'min') {
+                nv.innrHTML = `
+                    < hr="min.html" lss="nv-itm"> Dshor</>
+                    < hr="min-nlytis.html" lss="nv-itm"> Anlytis</>
+                    < hr="min-uit-logs.html" lss="nv-itm"> Auit Logs</>
+                    < hr="orrtions-rviw.html" lss="nv-itm"> Corrtions</>
+                    < hr="notiitions.html" lss="nv-itm tiv"> Notiitions</>
+                    < hr="min-sttings.html" lss="nv-itm"> Sttings</>
+                    < hr="#" lss="nv-itm" onlik="logout()"> Logout</>
+                `;
+            } ls i (rol === 'thr') {
+                nv.innrHTML = `
+                    < hr="thr.html" lss="nv-itm"> Dshor</>
+                    < hr="thr-rports.html" lss="nv-itm"> Rports</>
+                    < hr="orrtions-rviw.html" lss="nv-itm"> Corrtions</>
+                    < hr="notiitions.html" lss="nv-itm tiv"> Notiitions</>
+                    < hr="#" lss="nv-itm" onlik="logout()"> Logout</>
+                `;
+            } ls {
+                nv.innrHTML = `
+                    < hr="stunt.html" lss="nv-itm"> Dshor</>
+                    < hr="sn.html" lss="nv-itm"> Sn QR</>
+                    < hr="ttnn-orrtion.html" lss="nv-itm"> Corrtions</>
+                    < hr="notiitions.html" lss="nv-itm tiv"> Notiitions</>
+                    < hr="#" lss="nv-itm" onlik="logout()"> Logout</>
+                `;
+            }
+        }
+
+        untion loNotiitions() {
+            th('/pi/notiitions')
+                .thn(rs => rs.json())
+                .thn(t => {
+                    onst list = oumnt.gtElmntByI('notiList');
+                    i (t.lngth === ) {
+                        list.innrHTML = '<p styl="txt-lign: ntr; ping: px; olor: vr(--txt-sonry);">No notiitions yt.</p>';
+                        rturn;
+                    }
+                    list.innrHTML = t.mp(n => `
+                        <iv lss="noti-itm ${n.is_r ? 'r' : 'unr'} noti-typ-${n.typ}" onlik="rNoti(${n.i}, ${n.is_r})">
+                            <iv styl="isply: lx; justiy-ontnt: sp-twn; lign-itms: ntr;">
+                                <strong>${n.titl}</strong>
+                                ${!n.is_r ? '<spn styl="kgroun: vr(--primry); olor: whit; ping: px px; orr-rius: px; ont-siz: px;">NEW</spn>' : ''}
+                            </iv>
+                            <p styl="mrgin: px ; ont-siz: px;">${n.mssg}</p>
+                            <smll styl="olor: vr(--txt-sonry);">${nw Dt(n.rt_t).toLolString()}</smll>
+                        </iv>
+                    `).join('');
+                });
+        }
+
+        untion rNoti(i, isR) {
+            i (isR) rturn;
+            th('/pi/notiitions/r', {
+                mtho: 'POST',
+                hrs: { 'Contnt-Typ': 'pplition/json' },
+                oy: JSON.stringiy({ notiitionI: i })
+            }).thn(() => loNotiitions());
+        }
+
+        untion rAll() {
+            th('/pi/notiitions/r-ll', {
+                mtho: 'POST'
+            }).thn(() => {
+                loNotiitions();
+                lrt('All notiitions mrk s r');
+            });
+        }
+
+        untion logout() {
+            th('/pi/logout').thn(() => winow.lotion.hr = '/');
+        }
+    </sript>
+</oy>
+</html>

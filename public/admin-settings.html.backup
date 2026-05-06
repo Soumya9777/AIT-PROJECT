@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lng="n">
+<h>
+    <mt hrst="UTF-">
+    <mt nm="viwport" ontnt="with=vi-with, initil-sl=.">
+    <titl>Systm Sttings | Amin</titl>
+    <link rl="stylsht" hr="ss/styls-prossionl.ss">
+    <link hr="https://onts.googlpis.om/ss?mily=Intr:wght@;;;;;&isply=swp" rl="stylsht">
+</h>
+<oy>
+    <iv lss="ontinr">
+        <hr lss="hr">
+            <h>
+                <img sr="imgs/ollg-logo.jpg" lt="Logo" lss="hr-logo">
+                Systm Sttings
+            </h>
+            < hr="min.html" lss="tn-sonry">Bk</>
+        </hr>
+
+        <iv lss="r">
+            <iv lss="r-hr">
+                <iv lss="r-hr-ion"></iv>
+                <h>Gnrl Sttings</h>
+            </iv>
+            
+            <iv styl="isply: gri; gp: px;">
+                <iv lss="orm-group">
+                    <ll>Collg Nm</ll>
+                    <input typ="txt" i="ollgNm" plholr="NIST" vlu="NIST">
+                </iv>
+                
+                <iv lss="orm-group">
+                    <ll>Sssion Timout (minuts)</ll>
+                    <input typ="numr" i="sssionTimout" vlu="" min="" mx="">
+                </iv>
+                
+                <iv lss="orm-group">
+                    <ll>QR Co Rrsh Intrvl (sons)</ll>
+                    <input typ="numr" i="qrRrshIntrvl" vlu="" min="" mx="">
+                </iv>
+                
+                <iv styl="isply: lx; gp: px; lign-itms: ntr;">
+                    <ll styl="mrgin: ; txt-trnsorm: non; lttr-sping: ;">
+                        Enl F Vriition or Login
+                    </ll>
+                    <input typ="hkox" i="nlFVriy" hk styl="with: px; hight: px;">
+                </iv>
+                
+                <iv styl="isply: lx; gp: px; lign-itms: ntr;">
+                    <ll styl="mrgin: ; txt-trnsorm: non; lttr-sping: ;">
+                        Allow Stunts to Viw Attnn Prntg
+                    </ll>
+                    <input typ="hkox" i="llowPrntg" hk styl="with: px; hight: px;">
+                </iv>
+                
+                <iv styl="isply: lx; gp: px; lign-itms: ntr;">
+                    <ll styl="mrgin: ; txt-trnsorm: non; lttr-sping: ;">
+                        Enl Drk Mo
+                    </ll>
+                    <input typ="hkox" i="rkMo" styl="with: px; hight: px;" onhng="togglDrkMo(this.hk)">
+                </iv>
+
+                <iv styl="mrgin-top: px; ping-top: px; orr-top: px soli vr(--orr);">
+                    <h styl="mrgin-ottom: px;"> Goning Sttings</h>
+                    <p styl="ont-siz: px; olor: vr(--txt-sonry); mrgin-ottom: px;">
+                        St th ollg lotion oorints or goning. Stunts must  within th llow rius to mrk ttnn.
+                    </p>
+                    <iv styl="isply: gri; gri-tmplt-olumns: r r; gp: px;">
+                        <iv lss="orm-group">
+                            <ll>Ltitu</ll>
+                            <input typ="numr" i="ollgLt" stp="ny" plholr="." vlu=".">
+                        </iv>
+                        <iv lss="orm-group">
+                            <ll>Longitu</ll>
+                            <input typ="numr" i="ollgLng" stp="ny" plholr="." vlu=".">
+                        </iv>
+                    </iv>
+                    <iv lss="orm-group">
+                        <ll>Allow Rius (mtrs)</ll>
+                        <input typ="numr" i="llowRius" vlu="" min="" mx="">
+                    </iv>
+                </iv>
+            </iv>
+            
+            <utton onlik="svSttings()" lss="tn-primry" styl="mrgin-top: px; with: %;">
+                 Sv Sttings
+            </utton>
+            <iv i="sttingsMsg" styl="mrgin-top: px;"></iv>
+        </iv>
+
+        <!-- Bkup & Rstor -->
+        <iv lss="r" styl="mrgin-top: px;">
+            <iv lss="r-hr">
+                <iv lss="r-hr-ion"></iv>
+                <h>Bkup & Rstor</h>
+            </iv>
+            
+            <p styl="olor: vr(--gry-); mrgin-ottom: px;">
+                Downlo  kup o th ts or rstor rom  prvious kup.
+            </p>
+            
+            <iv styl="isply: lx; gp: px; lx-wrp: wrp; mrgin-ottom: px;">
+                <utton onlik="kupDB()" lss="tn-primry"> Crt Bkup</utton>
+            </iv>
+
+            <iv>
+                <h>Avill Bkups</h>
+                <iv i="kupsList"></iv>
+            </iv>
+        </iv>
+    </iv>
+
+    <sript>
+        (syn () => {
+            onst rs = wit th('/pi/sssion', { rntils: 'sm-origin' });
+            onst t = wit rs.json();
+            i (!t.rol || t.rol !== 'min') lotion.hr = '/';
+            
+            loSttings();
+        })();
+
+        syn untion loSttings() {
+            // In  rl pp, ths woul om rom th ts
+            // For now, w'll us lolStorg
+            onst sttings = JSON.prs(lolStorg.gtItm('it-sttings') || '{}');
+            
+            i (sttings.ollgNm) oumnt.gtElmntByI('ollgNm').vlu = sttings.ollgNm;
+            i (sttings.sssionTimout) oumnt.gtElmntByI('sssionTimout').vlu = sttings.sssionTimout;
+            i (sttings.qrRrshIntrvl) oumnt.gtElmntByI('qrRrshIntrvl').vlu = sttings.qrRrshIntrvl;
+            i (sttings.nlFVriy !== unin) oumnt.gtElmntByI('nlFVriy').hk = sttings.nlFVriy;
+            i (sttings.llowPrntg !== unin) oumnt.gtElmntByI('llowPrntg').hk = sttings.llowPrntg;
+            i (sttings.rkMo !== unin) {
+                oumnt.gtElmntByI('rkMo').hk = sttings.rkMo;
+                i (sttings.rkMo) oumnt.oumntElmnt.stAttriut('rk-mo', '');
+            }
+            i (sttings.ollgLotion) {
+                oumnt.gtElmntByI('ollgLt').vlu = sttings.ollgLotion.lt;
+                oumnt.gtElmntByI('ollgLng').vlu = sttings.ollgLotion.lng;
+            }
+            i (sttings.llowRius) oumnt.gtElmntByI('llowRius').vlu = sttings.llowRius;
+        }
+
+        untion togglDrkMo(nl) {
+            i (nl) {
+                oumnt.oumntElmnt.stAttriut('rk-mo', '');
+            } ls {
+                oumnt.oumntElmnt.rmovAttriut('rk-mo');
+            }
+        }
+
+        untion svSttings() {
+            onst sttings = {
+                ollgNm: oumnt.gtElmntByI('ollgNm').vlu,
+                sssionTimout: prsInt(oumnt.gtElmntByI('sssionTimout').vlu),
+                qrRrshIntrvl: prsInt(oumnt.gtElmntByI('qrRrshIntrvl').vlu),
+                nlFVriy: oumnt.gtElmntByI('nlFVriy').hk,
+                llowPrntg: oumnt.gtElmntByI('llowPrntg').hk,
+                rkMo: oumnt.gtElmntByI('rkMo').hk,
+                ollgLotion: {
+                    lt: prsFlot(oumnt.gtElmntByI('ollgLt').vlu),
+                    lng: prsFlot(oumnt.gtElmntByI('ollgLng').vlu)
+                },
+                llowRius: prsInt(oumnt.gtElmntByI('llowRius').vlu)
+            };
+            
+            lolStorg.stItm('it-sttings', JSON.stringiy(sttings));
+            
+            onst msgEl = oumnt.gtElmntByI('sttingsMsg');
+            msgEl.innrHTML = '<iv lss="txt-suss"> Sttings sv sussully!</iv>';
+            
+            stTimout(() => {
+                msgEl.innrHTML = '';
+            }, );
+            
+            showTost('Sttings sv!', 'suss');
+        }
+
+        untion kupDB() {
+            th('/pi/kup', { rntils: 'sm-origin' })
+                .thn(rs => rs.json())
+                .thn(t => {
+                    showTost(t.mssg || 'Bkup rt!', 'suss');
+                    loBkups();
+                })
+                .th(rr => showTost('Bkup il: ' + rr.mssg, 'rror'));
+        }
+
+        untion rstorDB(input) {
+            i (!input.ils[]) rturn;
+            
+            onst il = input.ils[];
+            onst rr = nw FilRr();
+            rr.onlo = untion() {
+                onst kupDir = '/kups/';
+                // In proution, you' uplo to srvr
+                showTost('Pls us th srvr-si rstor rom th kups list low', 'ino');
+            };
+            rr.rAsTxt(il);
+            input.vlu = '';
+        }
+
+        untion loBkups() {
+            th('/pi/kups', { rntils: 'sm-origin' })
+                .thn(rs => rs.json())
+                .thn(t => {
+                    onst list = oumnt.gtElmntByI('kupsList');
+                    i (!list) rturn;
+                    i (t.lngth === ) {
+                        list.innrHTML = '<p>No kups oun.</p>';
+                        rturn;
+                    }
+                    list.innrHTML = t.mp( => `
+                        <iv styl="kgroun: vr(--gry-); ping: px; mrgin: px ; orr-rius: px; isply: lx; justiy-ontnt: sp-twn; lign-itms: ntr;">
+                            <spn> ${.ilnm}</spn>
+                            <utton lss="tn-sonry" styl="ping: px px; ont-siz: px;" onlik="rstorFromBkup('${.ilnm}')">
+                                 Rstor
+                            </utton>
+                        </iv>
+                    `).join('');
+                });
+        }
+
+        untion rstorFromBkup(ilnm) {
+            i (!onirm(`Ar you sur you wnt to rstor rom ${ilnm}? This will ovrwrit urrnt t.`)) rturn;
+            
+            th('/pi/rstor', {
+                mtho: 'POST',
+                hrs: { 'Contnt-Typ': 'pplition/json' },
+                rntils: 'sm-origin',
+                oy: JSON.stringiy({ kupFil: ilnm })
+            })
+            .thn(rs => rs.json())
+            .thn(t => {
+                showTost(t.mssg || 'Rstor omplt!', 'suss');
+            })
+            .th(rr => showTost('Rstor il: ' + rr.mssg, 'rror'));
+        }
+
+        // Lo kups on pg lo
+        stTimout(loBkups, );
+
+        untion logout() {
+            th('/pi/logout', { rntils: 'sm-origin' }).thn(() => lotion.hr = '/');
+        }
+
+        // Kyor shortuts
+        oumnt.EvntListnr('kyown', () => {
+            i (.ky === 'Esp') {
+                lotion.hr = 'min.html';
+            }
+        });
+    </sript>
+</oy>
+</html>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lng="n">
+<h>
+    <mt hrst="UTF-">
+    <mt nm="viwport" ontnt="with=vi-with, initil-sl=.">
+    <titl>Smrt Attnn Systm | NIST</titl>
+    <link rl="stylsht" hr="ss/styls-prossionl.ss">
+    <link hr="https://onts.googlpis.om/ss?mily=Intr:wght@;;;&isply=swp" rl="stylsht">
+    <link rl="ion" hr="imgs/ollg-logo.jpg" typ="img/jpg">
+    <link rl="ion" hr="imgs/ollg-logo.jpg" typ="img/jpg">
+    <sript sr="js/tost.js"></sript>
+</h>
+<oy>
+    <iv lss="login-ontinr">
+        <!-- Login Form -->
+        <iv lss="r" i="loginStion">
+            <iv styl="txt-lign: ntr; mrgin-ottom: px;">
+                <img sr="imgs/ollg-logo.jpg" lt="Collg Logo" styl="hight: px; mrgin-ottom: px;">
+                <h styl="olor: vr(--rk); ont-siz: px; ont-wight: ; mrgin: ;">Smrt Attnn</h>
+                <p styl="olor: vr(--sonry); ont-siz: px; mrgin-top: px;">NIST - Sign in to ontinu</p>
+            </iv>
+            
+            <orm i="loginForm">
+                <iv lss="orm-group">
+                    <ll or="usrnm">Usrnm</ll>
+                    <input typ="txt" i="usrnm" plholr="Entr your usrnm" rquir utoomplt="o">
+                </iv>
+                <iv lss="orm-group">
+                    <ll or="psswor">Psswor</ll>
+                    <input typ="psswor" i="psswor" plholr="Entr your psswor" rquir>
+                </iv>
+                <iv styl="isply: lx; lign-itms: ntr; gp: px; mrgin-ottom: px;">
+                    <input typ="hkox" i="rmmrM" styl="with: px; hight: px;">
+                    <ll or="rmmrM" styl="mrgin: ; ont-siz: px; txt-trnsorm: non; lttr-sping: ;">Rmmr M</ll>
+                </iv>
+                <utton typ="sumit" lss="tn-primry" styl="with: %; ping: px; ont-siz: px;">Sign In</utton>
+                <iv i="loginError" lss="txt-ngr hin" styl="mrgin-top: px;"></iv>
+            </orm>
+        </iv>
+
+        <!-- Chng Psswor Form -->
+        <iv lss="r hin" i="hngPssworStion">
+            <iv styl="txt-lign: ntr; mrgin-ottom: px;">
+                <img sr="imgs/ollg-logo.jpg" lt="Collg Logo" styl="hight: px; mrgin-ottom: px;">
+                <h>St Nw Psswor</h>
+                <p styl="olor: vr(--sonry); ont-siz: px;">For surity, pls hng your tmporry psswor.</p>
+            </iv>
+            
+            <orm i="hngPssworForm">
+                <input typ="hin" i="pUsrnm">
+                <input typ="hin" i="pTmpPsswor">
+                
+                <iv lss="orm-group">
+                    <ll or="nwPsswor">Nw Psswor</ll>
+                    <input typ="psswor" i="nwPsswor" plholr="Entr nw psswor" rquir>
+                    <iv i="pssworStrngth" styl="isply: non; mrgin-top: px; ont-siz: px; ont-wight: ;"></iv>
+                </iv>
+                <iv lss="orm-group">
+                    <ll or="onirmPsswor">Conirm Psswor</ll>
+                    <input typ="psswor" i="onirmPsswor" plholr="Conirm nw psswor" rquir>
+                </iv>
+                <utton typ="sumit" lss="tn-primry" styl="with: %; ping: px; ont-siz: px;">Upt Psswor</utton>
+                <iv i="pError" lss="txt-ngr hin" styl="mrgin-top: px;"></iv>
+            </orm>
+        </iv>
+    </iv>
+
+    <sript sr="js/pp.js"></sript>
+</oy>
+</html>

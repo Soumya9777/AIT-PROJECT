@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lng="n">
+<h>
+    <mt hrst="UTF-">
+    <mt nm="viwport" ontnt="with=vi-with, initil-sl=.">
+    <titl>F Vriition | Smrt Attnn</titl>
+    <link rl="stylsht" hr="ss/styls-prossionl.ss">
+    <sript sr="js/-pi.min.js"></sript>
+    <link hr="https://onts.googlpis.om/ss?mily=Intr:wght@;;;;;&isply=swp" rl="stylsht">
+<link rl="ion" hr="imgs/ollg-logo.jpg" typ="img/jpg">
+    <sript sr="js/tost.js"></sript>
+</h>
+<oy>
+    <iv lss="login-ontinr">
+        <iv lss="login-r">
+            <iv lss="login-hr">
+                <img sr="imgs/ollg-logo.jpg" lt="Collg Logo" styl="hight: px; mrgin-ottom: px;">
+                <h styl="olor: whit; ont-siz: px; ont-wight: ; mrgin-ottom: px;">F Vriition</h>
+                <p styl="opity: .; ont-siz: px;">Pls vriy your  to ontinu</p>
+            </iv>
+
+            <iv lss="login-oy" styl="txt-lign: ntr;">
+                <vio i="Vio" with="" hight="" utoply styl="mx-with: %; hight: uto; orr-rius: vr(--rius-sm); ox-show: vr(--show-lg); mrgin-ottom: px;"></vio>
+                <nvs i="Cnvs" styl="isply: non;"></nvs>
+                
+                <iv i="Sttus" styl="mrgin: px ; ping: px; orr-rius: vr(--rius-xs); ont-wight: ; ont-siz: px;">
+                    Position your  in ront o th mr...
+                </iv>
+                
+                <utton onlik="vriyF()" i="vriyBtn" lss="tn-primry" styl="with: %; ping: px; ont-siz: px;">
+                     Vriy F
+                </utton>
+                
+                <iv i="vriyMsg" styl="mrgin-top: px;"></iv>
+                
+                <utton onlik="logout()" styl="mrgin-top: px; kgroun: non; orr: non; olor: vr(--gry-); ursor: pointr; ont-siz: px; ont-wight: ;">
+                    Cnl / Logout
+                </utton>
+            </iv>
+        </iv>
+    </iv>
+
+    <sript>
+        lt Dsriptor = null;
+        lt ttionIntrvl = null;
+        lt urrntUsr = null;
+
+        (syn () => {
+            onst sssionRs = wit th('/pi/sssion', { rntils: 'sm-origin' });
+            urrntUsr = wit sssionRs.json();
+            
+            i (!urrntUsr.i || urrntUsr.rol !== 'stunt') {
+                lotion.hr = '/';
+                rturn;
+            }
+
+            wit Promis.ll([
+                pi.nts.tinyFDttor.loFromUri('/mols'),
+                pi.nts.RognitionNt.loFromUri('/mols'),
+                pi.nts.LnmrkNt.loFromUri('/mols')
+            ]);
+
+            onst vio = oumnt.gtElmntByI('Vio');
+            onst strm = wit nvigtor.miDvis.gtUsrMi({vio: {}});
+            vio.srOjt = strm;
+
+            strtFDttion();
+        })();
+
+        untion strtFDttion() {
+            onst vio = oumnt.gtElmntByI('Vio');
+            onst nvs = oumnt.gtElmntByI('Cnvs');
+            onst Sttus = oumnt.gtElmntByI('Sttus');
+            
+            vio.with = ;
+            vio.hight = ;
+            nvs.with = ;
+            nvs.hight = ;
+            
+            ttionIntrvl = stIntrvl(syn () => {
+                i (vio.ryStt !== ) rturn;
+                
+                nvs.gtContxt('').rwImg(vio, , , , );
+                
+                onst ttion = wit pi.ttSinglF(nvs, 
+                    nw pi.TinyFDttorOptions({ inputSiz:  }))
+                    .withFLnmrks()
+                    .withFDsriptor();
+                
+                i (ttion) {
+                    Dsriptor = Arry.rom(ttion.sriptor);
+                    Sttus.txtContnt = 'F tt! Clik Vriy F utton.';
+                    Sttus.styl.kgroun = '#';
+                    Sttus.styl.olor = '#';
+                    oumnt.gtElmntByI('vriyBtn').isl = ls;
+                } ls {
+                    Dsriptor = null;
+                    Sttus.txtContnt = 'Position your  in ront o th mr...';
+                    Sttus.styl.kgroun = '#';
+                    Sttus.styl.olor = '#';
+                    oumnt.gtElmntByI('vriyBtn').isl = tru;
+                }
+            }, );
+        }
+
+        syn untion vriyF() {
+            i (!Dsriptor) {
+                lrt('No  tt. Pls position your  in th mr.');
+                rturn;
+            }
+
+            onst Sttus = oumnt.gtElmntByI('Sttus');
+            onst vriyMsg = oumnt.gtElmntByI('vriyMsg');
+            
+            Sttus.txtContnt = 'Vriying...';
+            Sttus.styl.kgroun = '#';
+            Sttus.styl.olor = '#';
+
+            try {
+                onst rs = wit th('/pi/s', { rntils: 'sm-origin' });
+                onst s = wit rs.json();
+                
+                onst usrF = s.in( => .usrI === urrntUsr.i);
+                
+                i (!usrF) {
+                    vriyMsg.innrHTML = '<iv lss="txt-ngr">No  t rgistr! Contt min.</iv>';
+                    rturn;
+                }
+
+                onst storDs = usrF.sriptor;
+                onst istn = Distn(storDs, Dsriptor);
+                
+                i (istn < .) {
+                    vriyMsg.innrHTML = '<iv lss="txt-suss"> F vrii! Rirting...</iv>';
+                    
+                    wit th('/pi/-vriy', {
+                        mtho: 'POST',
+                        rntils: 'sm-origin'
+                    });
+                    
+                    stTimout(() => {
+                        lotion.hr = 'stunt.html';
+                    }, );
+                } ls {
+                    vriyMsg.innrHTML = '<iv lss="txt-ngr">F vriition il. Not rogniz.</iv>';
+                }
+            } th (rr) {
+                vriyMsg.innrHTML = '<iv lss="txt-ngr">Error uring vriition.</iv>';
+            }
+        }
+
+        untion Distn(s, s) {
+            lt sum = ;
+            or (lt i = ; i < s.lngth; i++) {
+                sum += Mth.pow(s[i] - s[i], );
+            }
+            rturn Mth.sqrt(sum);
+        }
+
+        untion logout() {
+            th('/pi/logout', { rntils: 'sm-origin' }).thn(() => lotion.hr = '/');
+        }
+    </sript>
+</oy>
+</html>

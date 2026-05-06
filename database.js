@@ -3,12 +3,16 @@ const path = require('path');
 const bcrypt = require('bcryptjs');
 const fs = require('fs');
 
-const dataDir = path.resolve(__dirname, 'data');
-if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
+// Use DB_PATH environment variable if available (for Render.com persistent disk)
+const dbPath = process.env.DB_PATH || path.join(__dirname, 'data', 'attendance.db');
+const dbDir = path.dirname(dbPath);
+
+// Create database directory if it doesn't exist
+if (!fs.existsSync(dbDir)) {
+    fs.mkdirSync(dbDir, { recursive: true });
 }
 
-const dbPath = path.join(dataDir, 'attendance.db');
+console.log(`Database path: ${dbPath}`);
 const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
         console.error('Error opening database', err.message);
@@ -82,8 +86,50 @@ function initDb() {
             session_id INTEGER,
             student_id INTEGER,
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            status TEXT DEFAULT 'present',
             FOREIGN KEY(session_id) REFERENCES attendance_sessions(id),
             FOREIGN KEY(student_id) REFERENCES users(id)
+        )`);
+
+        // Audit Logs Table
+        db.run(`CREATE TABLE IF NOT EXISTS audit_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            username TEXT,
+            action TEXT,
+            details TEXT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(user_id) REFERENCES users(id)
+        )`);
+
+        // Attendance Corrections Table
+        db.run(`CREATE TABLE IF NOT EXISTS attendance_corrections (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            student_id INTEGER,
+            session_id INTEGER,
+            request_type TEXT,
+            reason TEXT,
+            document_path TEXT,
+            status TEXT DEFAULT 'pending',
+            reviewed_by INTEGER,
+            review_comment TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            reviewed_at DATETIME,
+            FOREIGN KEY(student_id) REFERENCES users(id),
+            FOREIGN KEY(session_id) REFERENCES attendance_sessions(id),
+            FOREIGN KEY(reviewed_by) REFERENCES users(id)
+        )`);
+
+        // Notifications Table
+        db.run(`CREATE TABLE IF NOT EXISTS notifications (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            title TEXT,
+            message TEXT,
+            type TEXT,
+            is_read INTEGER DEFAULT 0,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(user_id) REFERENCES users(id)
         )`);
 
         // Insert default admin if not exists
