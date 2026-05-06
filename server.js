@@ -248,6 +248,13 @@ app.post('/api/subjects', requireAuth, requireRole('admin'), (req, res) => {
     });
 });
 
+app.delete('/api/subjects/:id', requireAuth, requireRole('admin'), (req, res) => {
+    db.run("DELETE FROM subjects WHERE id = ?", [req.params.id], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: 'Subject deleted' });
+    });
+});
+
 // ============ SECTIONS API ============
 app.get('/api/sections', requireAuth, (req, res) => {
     db.all("SELECT * FROM sections ORDER BY name", (err, rows) => {

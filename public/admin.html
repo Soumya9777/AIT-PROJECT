@@ -39,17 +39,43 @@
                     </span>
                     Analytics
                 </a>
-                <a href="admin-manage-users.html" class="nav-item">
+                <a href="admin-manage.html" class="nav-item" id="manageNav">
                     <span class="nav-icon">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 20h9"/>
+                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                        </svg>
+                    </span>
+                    Manage
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-left: auto;">
+                        <polyline points="6 9 12 15 18 9"/>
+                    </svg>
+                </a>
+                <div class="nav-submenu" id="manageSubmenu" style="display: none;">
+                    <a href="admin-manage-users.html" class="nav-subitem">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                             <circle cx="9" cy="7" r="4"/>
                             <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
                             <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
                         </svg>
-                    </span>
-                    Manage Users
-                </a>
+                        Users
+                    </a>
+                    <a href="admin-manage-classes.html" class="nav-subitem">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 0 3 3h7z"/>
+                        </svg>
+                        Classes
+                    </a>
+                    <a href="admin-manage-subjects.html" class="nav-subitem">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                        </svg>
+                        Subjects
+                    </a>
+                </div>
                 <a href="corrections-review.html" class="nav-item">
                     <span class="nav-icon">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -190,6 +216,15 @@
             }
             
             loadStats();
+            
+            // Manage submenu toggle
+            const manageNav = document.getElementById('manageNav');
+            const manageSubmenu = document.getElementById('manageSubmenu');
+            manageNav.addEventListener('click', (e) => {
+                e.preventDefault();
+                manageSubmenu.style.display = manageSubmenu.style.display === 'none' ? 'flex' : 'none';
+                manageNav.querySelector('svg:last-of-type').style.transform = manageSubmenu.style.display === 'none' ? 'rotate(0deg)' : 'rotate(180deg)';
+            });
         })();
 
         async function loadStats() {

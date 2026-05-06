@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Classes | Admin Portal</title>
+    <link rel="stylesheet" href="css/styles-professional.css">
+    <link rel="icon" href="images/college-logo.jpg" type="image/jpg">
+    <script src="js/toast.js"></script>
+</head>
+<body>
+    <div class="dashboard">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                    </svg>
+                    AIT Attendance
+                </h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="admin.html" class="nav-item">
+                    <span class="nav-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                            <polyline points="9 22 9 12 15 12 15 22"/>
+                        </svg>
+                    </span>
+                    Dashboard
+                </a>
+                <a href="admin-manage.html" class="nav-item active">
+                    <span class="nav-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 20h9"/>
+                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                        </svg>
+                    </span>
+                    Manage
+                </a>
+                <div class="nav-submenu" style="display: flex;">
+                    <a href="admin-manage-users.html" class="nav-subitem">Users</a>
+                    <a href="admin-manage-classes.html" class="nav-subitem active">Classes</a>
+                    <a href="admin-manage-subjects.html" class="nav-subitem">Subjects</a>
+                </div>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="header">
+                <h1>
+                    <img src="images/college-logo.jpg" alt="Logo" class="header-logo">
+                    Manage Classes
+                </h1>
+                <a href="admin.html" class="btn-secondary">Back</a>
+            </header>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-header-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 0 3 3h7z"/>
+                        </svg>
+                    </div>
+                    <h3>Classes</h3>
+                </div>
+                
+                <div class="add-form" style="margin-bottom: 24px;">
+                    <h4 style="margin-bottom: 12px; font-size: 16px; color: var(--gray-700);">Add New Class</h4>
+                    <div style="display: flex; gap: 12px;">
+                        <input type="text" id="className" placeholder="Class name (e.g., CSE-A)" style="flex: 1; padding: 12px 16px; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 15px;">
+                        <input type="text" id="classDesc" placeholder="Description (optional)" style="flex: 2; padding: 12px 16px; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 15px;">
+                        <button onclick="addClass()" class="btn-primary">Add Class</button>
+                    </div>
+                </div>
+
+                <div id="classesList"></div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        async function loadClasses() {
+            const res = await fetch('/api/sections', { credentials: 'same-origin' });
+            const classes = await res.json();
+            
+            document.getElementById('classesList').innerHTML = classes.length === 0 
+                ? '<p style="padding: 20px; text-align: center; color: var(--gray-500);">No classes yet. Add one above.</p>'
+                : classes.map(c => `
+                    <div class="user-card">
+                        <div class="user-info">
+                            <div class="user-avatar">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 0 3 3h7z"/>
+                                </svg>
+                            </div>
+                            <div class="user-details">
+                                <h4>${c.name}</h4>
+                                <p>${c.description || 'No description'}</p>
+                            </div>
+                        </div>
+                        <div class="user-actions">
+                            <button onclick="deleteClass(${c.id}, '${c.name.replace(/'/g, "\\'")}')" class="btn-face btn-delete">Delete</button>
+                        </div>
+                    </div>
+                `).join('');
+        }
+
+        async function addClass() {
+            const name = document.getElementById('className').value.trim();
+            const desc = document.getElementById('classDesc').value.trim();
+            if (!name) return alert('Class name is required');
+
+            const res = await fetch('/api/sections', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, description: desc }),
+                credentials: 'same-origin'
+            });
+
+            if (res.ok) {
+                document.getElementById('className').value = '';
+                document.getElementById('classDesc').value = '';
+                loadClasses();
+            } else {
+                const data = await res.json();
+                alert('Error: ' + data.error);
+            }
+        }
+
+        async function deleteClass(id, name) {
+            if (!confirm(`Delete class "${name}"? This cannot be undone.`)) return;
+            
+            const res = await fetch(`/api/sections/${id}`, {
+                method: 'DELETE',
+                credentials: 'same-origin'
+            });
+
+            if (res.ok) {
+                loadClasses();
+            } else {
+                alert('Error deleting class');
+            }
+        }
+
+        (async () => {
+            const res = await fetch('/api/session', { credentials: 'same-origin' });
+            const data = await res.json();
+            if (!data.role || data.role !== 'admin') location.href = '/';
+            loadClasses();
+        })();
+    </script>
+</body>
+</html>
