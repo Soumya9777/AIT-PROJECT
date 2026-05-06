@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Review Corrections - AIT Attendance System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles-professional.css">
+    <style>
+        .correction-item { 
+            background: var(--bg-secondary); 
+            padding: 20px; 
+            margin: 15px 0; 
+            border-radius: 8px;
+            border-left: 4px solid #f59e0b;
+        }
+        .correction-item.approved { border-left-color: #10b981; }
+        .correction-item.rejected { border-left-color: #ef4444; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+        .badge-pending { background: #fef3c7; color: #92400e; }
+        .badge-approved { background: #d1fae5; color: #065f46; }
+        .badge-rejected { background: #fee2e2; color: #991b1b; }
+        .review-form { margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border); }
+        textarea { width: 100%; min-height: 80px; padding: 10px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>🎓 AIT Attendance</h2>
+            </div>
+            <nav class="sidebar-nav" id="sidebarNav">
+                <!-- Will be populated based on role -->
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="header">
+                <h1>Review Correction Requests</h1>
+            </div>
+
+            <div class="card">
+                <div id="correctionsList"></div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let userRole = '';
+
+        checkAuth();
+        loadCorrections();
+
+        function checkAuth() {
+            fetch('/api/session')
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.id) {
+                        window.location.href = '/';
+                        return;
+                    }
+                    userRole = data.role;
+                    setupSidebar(data.role);
+                });
+        }
+
+        function setupSidebar(role) {
+            const nav = document.getElementById('sidebarNav');
+            if (role === 'admin') {
+                nav.innerHTML = `
+                    <a href="admin.html" class="nav-item">📊 Dashboard</a>
+                    <a href="admin-manage-users.html" class="nav-item">👥 Users</a>
+                    <a href="admin-analytics.html" class="nav-item">📈 Analytics</a>
+                    <a href="corrections-review.html" class="nav-item active">✏️ Corrections</a>
+                    <a href="admin-audit-logs.html" class="nav-item">📋 Audit Logs</a>
+                    <a href="admin-settings.html" class="nav-item">⚙️ Settings</a>
+                    <a href="#" class="nav-item" onclick="logout()">🚪 Logout</a>
+                `;
+            } else {
+                nav.innerHTML = `
+                    <a href="teacher.html" class="nav-item">📊 Dashboard</a>
+                    <a href="teacher-reports.html" class="nav-item">📄 Reports</a>
+                    <a href="corrections-review.html" class="nav-item active">✏️ Corrections</a>
+                    <a href="#" class="nav-item" onclick="logout()">🚪 Logout</a>
+                `;
+            }
+        }
+
+        function loadCorrections() {
+            fetch('/api/attendance/corrections')
+                .then(res => res.json())
+                .then(data => {
+                    const list = document.getElementById('correctionsList');
+                    if (data.length === 0) {
+                        list.innerHTML = '<p>No correction requests found.</p>';
+                        return;
+                    }
+                    list.innerHTML = data.map(c => `
+                        <div class="correction-item ${c.status}">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <h3>${c.student_name} (${c.section_name})</h3>
+                                <span class="badge badge-${c.status}">${c.status}</span>
+                            </div>
+                            <p><strong>Session:</strong> ${c.subject} - ${c.topic}</p>
+                            <p><strong>Request Type:</strong> ${c.request_type}</p>
+                            <p><strong>Reason:</strong> ${c.reason}</p>
+                            ${c.review_comment ? `<p><strong>Review Comment:</strong> ${c.review_comment}</p>` : ''}
+                            <small>${new Date(c.created_at).toLocaleString()}</small>
+                            
+                            ${c.status === 'pending' ? `
+                            <div class="review-form">
+                                <textarea id="comment-${c.id}" placeholder="Add review comment (optional)"></textarea>
+                                <button class="btn btn-success" onclick="reviewCorrection(${c.id}, 'approved')">✓ Approve</button>
+                                <button class="btn btn-danger" onclick="reviewCorrection(${c.id}, 'rejected')">✗ Reject</button>
+                            </div>
+                            ` : ''}
+                        </div>
+                    `).join('');
+                });
+        }
+
+        function reviewCorrection(correctionId, status) {
+            const comment = document.getElementById(`comment-${correctionId}`).value;
+            
+            fetch('/api/attendance/correction/review', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ correctionId, status, comment })
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert(data.message);
+                loadCorrections();
+            })
+            .catch(err => alert('Error: ' + err.message));
+        }
+
+        function logout() {
+            fetch('/api/logout').then(() => window.location.href = '/');
+        }
+    </script>
+</body>
+</html>

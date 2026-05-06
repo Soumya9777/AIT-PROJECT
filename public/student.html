@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Portal | Smart Attendance</title>
-    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/styles-professional.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="icon" href="images/college-logo.jpg" type="image/jpg">
     <script src="js/toast.js"></script>
@@ -17,6 +17,16 @@
                 Student Portal
             </h1>
             <div style="display: flex; gap: 12px; align-items: center;">
+                <div style="position: relative;">
+                    <button onclick="toggleNotifications()" class="btn-secondary" id="notifBtn">🔔 <span id="notifCount" style="display:none; background: red; color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; position: absolute; top: -5px; right: -5px;">0</span></button>
+                    <div id="notifDropdown" style="display:none; position: absolute; right: 0; top: 100%; background: var(--bg-primary); border: 1px solid var(--border); border-radius: 8px; width: 300px; max-height: 400px; overflow-y: auto; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                        <div style="padding: 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                            <strong>Notifications</strong>
+                            <button onclick="readAllNotifications()" style="background: none; border: none; color: var(--primary); cursor: pointer; font-size: 12px;">Mark all read</button>
+                        </div>
+                        <div id="notifList"></div>
+                    </div>
+                </div>
                 <a href="profile.html" class="btn-secondary" style="text-decoration: none;">👤 Profile</a>
                 <button onclick="logout()" class="btn-secondary">Logout</button>
             </div>
@@ -60,6 +70,16 @@
             </a>
         </div>
 
+        <!-- Quick Links -->
+        <div style="margin-top: 24px; display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;">
+            <a href="attendance-correction.html" class="btn-secondary" style="text-decoration: none;">
+                ✏️ Request Correction
+            </a>
+            <a href="/api/export/attendance?format=xlsx" class="btn-secondary" style="text-decoration: none;">
+                📥 Export My Data
+            </a>
+        </div>
+
         <!-- Attendance Records -->
         <div class="card" style="margin-top: 24px;">
             <div class="card-header">
@@ -71,5 +91,82 @@
     </div>
 
     <script src="js/student.js"></script>
+    <script>
+        // Notification system
+        let notifOpen = false;
+        
+        function toggleNotifications() {
+            const dropdown = document.getElementById('notifDropdown');
+            notifOpen = !notifOpen;
+            dropdown.style.display = notifOpen ? 'block' : 'none';
+            if (notifOpen) loadNotifications();
+        }
+
+        function loadNotifications() {
+            fetch('/api/notifications', { credentials: 'same-origin' })
+                .then(res => res.json())
+                .then(data => {
+                    const list = document.getElementById('notifList');
+                    if (data.length === 0) {
+                        list.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-secondary);">No notifications</div>';
+                        return;
+                    }
+                    list.innerHTML = data.map(n => `
+                        <div style="padding: 12px; border-bottom: 1px solid var(--border); background: ${n.is_read ? 'transparent' : 'var(--bg-secondary)'}; cursor: pointer;" onclick="readNotification(${n.id})">
+                            <div style="font-weight: ${n.is_read ? 'normal' : '600'}; font-size: 14px;">${n.title}</div>
+                            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">${n.message}</div>
+                            <div style="font-size: 10px; color: var(--text-secondary); margin-top: 4px;">${new Date(n.created_at).toLocaleString()}</div>
+                        </div>
+                    `).join('');
+                });
+        }
+
+        function readNotification(id) {
+            fetch('/api/notifications/read', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                body: JSON.stringify({ notificationId: id })
+            }).then(() => {
+                loadNotifications();
+                updateNotifCount();
+            });
+        }
+
+        function readAllNotifications() {
+            fetch('/api/notifications/read-all', {
+                method: 'POST',
+                credentials: 'same-origin'
+            }).then(() => {
+                loadNotifications();
+                updateNotifCount();
+            });
+        }
+
+        function updateNotifCount() {
+            fetch('/api/notifications/unread-count', { credentials: 'same-origin' })
+                .then(res => res.json())
+                .then(data => {
+                    const countEl = document.getElementById('notifCount');
+                    if (data.count > 0) {
+                        countEl.textContent = data.count;
+                        countEl.style.display = 'block';
+                    } else {
+                        countEl.style.display = 'none';
+                    }
+                });
+        }
+
+        // Update notification count on page load
+        setTimeout(updateNotifCount, 500);
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#notifBtn') && !e.target.closest('#notifDropdown')) {
+                document.getElementById('notifDropdown').style.display = 'none';
+                notifOpen = false;
+            }
+        });
+    </script>
 </body>
 </html>

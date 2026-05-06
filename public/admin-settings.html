@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>System Settings | Admin</title>
-    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/styles-professional.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -59,6 +59,27 @@
                     </label>
                     <input type="checkbox" id="darkMode" style="width: 20px; height: 20px;" onchange="toggleDarkMode(this.checked)">
                 </div>
+
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border);">
+                    <h4 style="margin-bottom: 12px;">📍 Geofencing Settings</h4>
+                    <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">
+                        Set the college location coordinates for geofencing. Students must be within the allowed radius to mark attendance.
+                    </p>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div class="form-group">
+                            <label>Latitude</label>
+                            <input type="number" id="collegeLat" step="any" placeholder="21.8934" value="21.8934">
+                        </div>
+                        <div class="form-group">
+                            <label>Longitude</label>
+                            <input type="number" id="collegeLng" step="any" placeholder="86.9325" value="86.9325">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Allowed Radius (meters)</label>
+                        <input type="number" id="allowedRadius" value="500" min="100" max="5000">
+                    </div>
+                </div>
             </div>
             
             <button onclick="saveSettings()" class="btn-primary" style="margin-top: 24px; width: 100%;">
@@ -78,10 +99,13 @@
                 Download a backup of the database or restore from a previous backup.
             </p>
             
-            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                <button onclick="backupDB()" class="btn-primary">📥 Download Backup</button>
-                <button onclick="document.getElementById('restoreFile').click()" class="btn-secondary">📤 Restore Backup</button>
-                <input type="file" id="restoreFile" accept=".db" style="display: none;" onchange="restoreDB(this)">
+            <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px;">
+                <button onclick="backupDB()" class="btn-primary">📥 Create Backup</button>
+            </div>
+
+            <div>
+                <h4>Available Backups</h4>
+                <div id="backupsList"></div>
             </div>
         </div>
     </div>
@@ -109,6 +133,11 @@
                 document.getElementById('darkMode').checked = settings.darkMode;
                 if (settings.darkMode) document.documentElement.setAttribute('dark-mode', '');
             }
+            if (settings.collegeLocation) {
+                document.getElementById('collegeLat').value = settings.collegeLocation.lat;
+                document.getElementById('collegeLng').value = settings.collegeLocation.lng;
+            }
+            if (settings.allowedRadius) document.getElementById('allowedRadius').value = settings.allowedRadius;
         }
 
         function toggleDarkMode(enabled) {
@@ -126,7 +155,12 @@
                 qrRefreshInterval: parseInt(document.getElementById('qrRefreshInterval').value),
                 enableFaceVerify: document.getElementById('enableFaceVerify').checked,
                 allowPercentage: document.getElementById('allowPercentage').checked,
-                darkMode: document.getElementById('darkMode').checked
+                darkMode: document.getElementById('darkMode').checked,
+                collegeLocation: {
+                    lat: parseFloat(document.getElementById('collegeLat').value),
+                    lng: parseFloat(document.getElementById('collegeLng').value)
+                },
+                allowedRadius: parseInt(document.getElementById('allowedRadius').value)
             };
             
             localStorage.setItem('ait-settings', JSON.stringify(settings));
@@ -142,16 +176,68 @@
         }
 
         function backupDB() {
-            // In a real app, this would trigger a server-side backup
-            showToast('Backup feature coming soon!', 'success');
+            fetch('/api/backup', { credentials: 'same-origin' })
+                .then(res => res.json())
+                .then(data => {
+                    showToast(data.message || 'Backup created!', 'success');
+                    loadBackups();
+                })
+                .catch(err => showToast('Backup failed: ' + err.message, 'error'));
         }
 
         function restoreDB(input) {
             if (!input.files[0]) return;
             
-            showToast('Restore feature coming soon!', 'success');
+            const file = input.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const backupDir = '/backups/';
+                // In production, you'd upload to server
+                showToast('Please use the server-side restore from the backups list below', 'info');
+            };
+            reader.readAsText(file);
             input.value = '';
         }
+
+        function loadBackups() {
+            fetch('/api/backups', { credentials: 'same-origin' })
+                .then(res => res.json())
+                .then(data => {
+                    const list = document.getElementById('backupsList');
+                    if (!list) return;
+                    if (data.length === 0) {
+                        list.innerHTML = '<p>No backups found.</p>';
+                        return;
+                    }
+                    list.innerHTML = data.map(b => `
+                        <div style="background: var(--gray-50); padding: 12px; margin: 8px 0; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+                            <span>📄 ${b.filename}</span>
+                            <button class="btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="restoreFromBackup('${b.filename}')">
+                                🔄 Restore
+                            </button>
+                        </div>
+                    `).join('');
+                });
+        }
+
+        function restoreFromBackup(filename) {
+            if (!confirm(`Are you sure you want to restore from ${filename}? This will overwrite current data.`)) return;
+            
+            fetch('/api/restore', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                body: JSON.stringify({ backupFile: filename })
+            })
+            .then(res => res.json())
+            .then(data => {
+                showToast(data.message || 'Restore completed!', 'success');
+            })
+            .catch(err => showToast('Restore failed: ' + err.message, 'error'));
+        }
+
+        // Load backups on page load
+        setTimeout(loadBackups, 500);
 
         function logout() {
             fetch('/api/logout', { credentials: 'same-origin' }).then(() => location.href = '/');

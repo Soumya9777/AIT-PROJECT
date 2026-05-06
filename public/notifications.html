@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications - AIT Attendance System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles-professional.css">
+    <style>
+        .notif-item { 
+            background: var(--bg-secondary); 
+            padding: 15px; 
+            margin: 10px 0; 
+            border-radius: 8px;
+            border-left: 4px solid var(--primary);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .notif-item:hover { transform: translateX(5px); }
+        .notif-item.unread { background: var(--bg-primary); border-left-color: var(--primary); font-weight: 600; }
+        .notif-item.read { opacity: 0.7; }
+        .notif-type-info { border-left-color: #3b82f6; }
+        .notif-type-success { border-left-color: #10b981; }
+        .notif-type-warning { border-left-color: #f59e0b; }
+        .notif-type-error { border-left-color: #ef4444; }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>🎓 AIT Attendance</h2>
+            </div>
+            <nav class="sidebar-nav" id="sidebarNav">
+                <!-- Populated based on role -->
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="header">
+                <h1>Notifications</h1>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-secondary" onclick="readAll()">Mark All Read</button>
+                    <button class="btn btn-primary" onclick="loadNotifications()">🔄 Refresh</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div id="notifList"></div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let userRole = '';
+        let userId = '';
+
+        checkAuth();
+        loadNotifications();
+
+        function checkAuth() {
+            fetch('/api/session')
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.id) {
+                        window.location.href = '/';
+                        return;
+                    }
+                    userRole = data.role;
+                    userId = data.id;
+                    setupSidebar(data.role);
+                });
+        }
+
+        function setupSidebar(role) {
+            const nav = document.getElementById('sidebarNav');
+            if (role === 'admin') {
+                nav.innerHTML = `
+                    <a href="admin.html" class="nav-item">📊 Dashboard</a>
+                    <a href="admin-analytics.html" class="nav-item">📈 Analytics</a>
+                    <a href="admin-audit-logs.html" class="nav-item">📋 Audit Logs</a>
+                    <a href="corrections-review.html" class="nav-item">✏️ Corrections</a>
+                    <a href="notifications.html" class="nav-item active">🔔 Notifications</a>
+                    <a href="admin-settings.html" class="nav-item">⚙️ Settings</a>
+                    <a href="#" class="nav-item" onclick="logout()">🚪 Logout</a>
+                `;
+            } else if (role === 'teacher') {
+                nav.innerHTML = `
+                    <a href="teacher.html" class="nav-item">📊 Dashboard</a>
+                    <a href="teacher-reports.html" class="nav-item">📄 Reports</a>
+                    <a href="corrections-review.html" class="nav-item">✏️ Corrections</a>
+                    <a href="notifications.html" class="nav-item active">🔔 Notifications</a>
+                    <a href="#" class="nav-item" onclick="logout()">🚪 Logout</a>
+                `;
+            } else {
+                nav.innerHTML = `
+                    <a href="student.html" class="nav-item">📊 Dashboard</a>
+                    <a href="scan.html" class="nav-item">📷 Scan QR</a>
+                    <a href="attendance-correction.html" class="nav-item">✏️ Corrections</a>
+                    <a href="notifications.html" class="nav-item active">🔔 Notifications</a>
+                    <a href="#" class="nav-item" onclick="logout()">🚪 Logout</a>
+                `;
+            }
+        }
+
+        function loadNotifications() {
+            fetch('/api/notifications')
+                .then(res => res.json())
+                .then(data => {
+                    const list = document.getElementById('notifList');
+                    if (data.length === 0) {
+                        list.innerHTML = '<p style="text-align: center; padding: 40px; color: var(--text-secondary);">No notifications yet.</p>';
+                        return;
+                    }
+                    list.innerHTML = data.map(n => `
+                        <div class="notif-item ${n.is_read ? 'read' : 'unread'} notif-type-${n.type}" onclick="readNotif(${n.id}, ${n.is_read})">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <strong>${n.title}</strong>
+                                ${!n.is_read ? '<span style="background: var(--primary); color: white; padding: 2px 8px; border-radius: 12px; font-size: 10px;">NEW</span>' : ''}
+                            </div>
+                            <p style="margin: 8px 0; font-size: 14px;">${n.message}</p>
+                            <small style="color: var(--text-secondary);">${new Date(n.created_at).toLocaleString()}</small>
+                        </div>
+                    `).join('');
+                });
+        }
+
+        function readNotif(id, isRead) {
+            if (isRead) return;
+            fetch('/api/notifications/read', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ notificationId: id })
+            }).then(() => loadNotifications());
+        }
+
+        function readAll() {
+            fetch('/api/notifications/read-all', {
+                method: 'POST'
+            }).then(() => {
+                loadNotifications();
+                alert('All notifications marked as read');
+            });
+        }
+
+        function logout() {
+            fetch('/api/logout').then(() => window.location.href = '/');
+        }
+    </script>
+</body>
+</html>

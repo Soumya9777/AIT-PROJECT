@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audit Logs - AIT Attendance System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles-professional.css">
+    <style>
+        .log-item { 
+            background: var(--bg-secondary); 
+            padding: 15px; 
+            margin: 10px 0; 
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .log-time { color: var(--text-secondary); font-size: 12px; }
+        .log-action { 
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 12px;
+            margin-right: 10px;
+        }
+        .action-LOGIN { background: #d1fae5; color: #065f46; }
+        .action-LOGOUT { background: #e0e7ff; color: #3730a3; }
+        .action-CORRECTION { background: #fef3c7; color: #92400e; }
+        .action-BACKUP { background: #dbeafe; color: #1e40af; }
+        .pagination { margin: 20px 0; text-align: center; }
+        .pagination button { margin: 0 5px; }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>🎓 AIT Attendance</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="admin.html" class="nav-item">📊 Dashboard</a>
+                <a href="admin-manage-users.html" class="nav-item">👥 Users</a>
+                <a href="admin-sections.html" class="nav-item">📚 Sections</a>
+                <a href="admin-audit-logs.html" class="nav-item active">📋 Audit Logs</a>
+                <a href="admin-settings.html" class="nav-item">⚙️ Settings</a>
+                <a href="#" class="nav-item" onclick="logout()">🚪 Logout</a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="header">
+                <h1>Audit Logs</h1>
+                <div>
+                    <input type="number" id="limit" value="50" min="10" max="500" style="width: 80px; padding: 8px;">
+                    <button class="btn btn-primary" onclick="loadLogs()">🔄 Refresh</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div id="logsList"></div>
+                <div class="pagination">
+                    <button class="btn btn-secondary" onclick="prevPage()">Previous</button>
+                    <span id="pageInfo">Page 1</span>
+                    <button class="btn btn-secondary" onclick="nextPage()">Next</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let currentPage = 0;
+        let limit = 50;
+        let totalLogs = 0;
+
+        checkAuth();
+        loadLogs();
+
+        function checkAuth() {
+            fetch('/api/session')
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.id || data.role !== 'admin') {
+                        window.location.href = '/';
+                    }
+                });
+        }
+
+        function loadLogs() {
+            limit = parseInt(document.getElementById('limit').value) || 50;
+            const offset = currentPage * limit;
+            
+            fetch(`/api/audit-logs?limit=${limit}&offset=${offset}`)
+                .then(res => res.json())
+                .then(data => {
+                    totalLogs = data.total;
+                    const list = document.getElementById('logsList');
+                    if (data.logs.length === 0) {
+                        list.innerHTML = '<p>No audit logs found.</p>';
+                        return;
+                    }
+                    list.innerHTML = data.logs.map(log => `
+                        <div class="log-item">
+                            <span class="log-action action-${log.action.split('_')[0]}">${log.action}</span>
+                            <strong>${log.username || 'Unknown'}</strong>: ${log.details}
+                            <div class="log-time">${new Date(log.timestamp).toLocaleString()}</div>
+                        </div>
+                    `).join('');
+                    document.getElementById('pageInfo').textContent = `Page ${currentPage + 1} of ${Math.ceil(totalLogs / limit)}`;
+                });
+        }
+
+        function nextPage() {
+            if ((currentPage + 1) * limit < totalLogs) {
+                currentPage++;
+                loadLogs();
+            }
+        }
+
+        function prevPage() {
+            if (currentPage > 0) {
+                currentPage--;
+                loadLogs();
+            }
+        }
+
+        function logout() {
+            fetch('/api/logout').then(() => window.location.href = '/');
+        }
+    </script>
+</body>
+</html>

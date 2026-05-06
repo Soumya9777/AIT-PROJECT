@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Attendance System | NIST</title>
-    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/styles-professional.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="icon" href="images/college-logo.jpg" type="image/jpg">
     <link rel="icon" href="images/college-logo.jpg" type="image/jpg">
@@ -29,6 +29,10 @@
                     <label for="password">Password</label>
                     <input type="password" id="password" placeholder="Enter your password" required>
                 </div>
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+                    <input type="checkbox" id="rememberMe" style="width: 16px; height: 16px;">
+                    <label for="rememberMe" style="margin: 0; font-size: 14px; text-transform: none; letter-spacing: 0;">Remember Me</label>
+                </div>
                 <button type="submit" class="btn-primary" style="width: 100%; padding: 16px; font-size: 16px;">Sign In</button>
                 <div id="loginError" class="text-danger hidden" style="margin-top: 16px;"></div>
             </form>
@@ -49,6 +53,7 @@
                 <div class="form-group">
                     <label for="newPassword">New Password</label>
                     <input type="password" id="newPassword" placeholder="Enter new password" required>
+                    <div id="passwordStrength" style="display: none; margin-top: 8px; font-size: 12px; font-weight: 600;"></div>
                 </div>
                 <div class="form-group">
                     <label for="confirmPassword">Confirm Password</label>

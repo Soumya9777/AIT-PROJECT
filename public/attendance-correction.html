@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Correction - AIT Attendance System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles-professional.css">
+    <style>
+        .correction-form { max-width: 600px; margin: 20px auto; }
+        .correction-item { 
+            background: var(--bg-secondary); 
+            padding: 15px; 
+            margin: 10px 0; 
+            border-radius: 8px;
+            border-left: 4px solid var(--primary);
+        }
+        .status-pending { border-left-color: #f59e0b; }
+        .status-approved { border-left-color: #10b981; }
+        .status-rejected { border-left-color: #ef4444; }
+        select, textarea { width: 100%; padding: 10px; margin: 10px 0; }
+        textarea { min-height: 100px; resize: vertical; }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>🎓 AIT Attendance</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="student.html" class="nav-item">📊 Dashboard</a>
+                <a href="scan.html" class="nav-item">📷 Scan QR</a>
+                <a href="attendance-correction.html" class="nav-item active">✏️ Corrections</a>
+                <a href="profile.html" class="nav-item">👤 Profile</a>
+                <a href="#" class="nav-item" onclick="logout()">🚪 Logout</a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="header">
+                <h1>Attendance Correction Requests</h1>
+                <button class="btn btn-primary" onclick="showForm()">➕ New Request</button>
+            </div>
+
+            <div id="correctionForm" class="card correction-form" style="display: none;">
+                <h3>Submit Correction Request</h3>
+                <select id="sessionSelect">
+                    <option value="">Select Session</option>
+                </select>
+                <select id="requestType">
+                    <option value="mark_present">Mark as Present</option>
+                    <option value="remove_incorrect">Remove Incorrect Mark</option>
+                    <option value="other">Other</option>
+                </select>
+                <textarea id="reason" placeholder="Enter reason for correction..."></textarea>
+                <button class="btn btn-success" onclick="submitCorrection()">Submit Request</button>
+                <button class="btn btn-secondary" onclick="hideForm()">Cancel</button>
+            </div>
+
+            <div class="card">
+                <h3>My Requests</h3>
+                <div id="correctionsList"></div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let sessions = [];
+
+        checkAuth();
+        loadSessions();
+        loadCorrections();
+
+        function checkAuth() {
+            fetch('/api/session')
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.id || data.role !== 'student') {
+                        window.location.href = '/';
+                    }
+                });
+        }
+
+        function loadSessions() {
+            fetch('/api/attendance/sessions/active')
+                .then(res => res.json())
+                .then(data => {
+                    sessions = data;
+                    const select = document.getElementById('sessionSelect');
+                    data.forEach(s => {
+                        select.innerHTML += `<option value="${s.id}">${s.subject} - ${s.topic} (${s.section_name})</option>`;
+                    });
+                });
+        }
+
+        function loadCorrections() {
+            fetch('/api/attendance/corrections')
+                .then(res => res.json())
+                .then(data => {
+                    const list = document.getElementById('correctionsList');
+                    if (data.length === 0) {
+                        list.innerHTML = '<p>No correction requests yet.</p>';
+                        return;
+                    }
+                    list.innerHTML = data.map(c => `
+                        <div class="correction-item status-${c.status}">
+                            <h4>${c.subject} - ${c.topic}</h4>
+                            <p><strong>Type:</strong> ${c.request_type}</p>
+                            <p><strong>Reason:</strong> ${c.reason}</p>
+                            <p><strong>Status:</strong> <span class="badge">${c.status}</span></p>
+                            ${c.review_comment ? `<p><strong>Comment:</strong> ${c.review_comment}</p>` : ''}
+                            <small>${new Date(c.created_at).toLocaleString()}</small>
+                        </div>
+                    `).join('');
+                });
+        }
+
+        function showForm() { document.getElementById('correctionForm').style.display = 'block'; }
+        function hideForm() { document.getElementById('correctionForm').style.display = 'none'; }
+
+        function submitCorrection() {
+            const sessionId = document.getElementById('sessionSelect').value;
+            const requestType = document.getElementById('requestType').value;
+            const reason = document.getElementById('reason').value;
+
+            if (!sessionId || !reason) {
+                alert('Please fill all fields');
+                return;
+            }
+
+            fetch('/api/attendance/correction', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sessionId, requestType, reason })
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert(data.message || 'Request submitted');
+                hideForm();
+                loadCorrections();
+            })
+            .catch(err => alert('Error: ' + err.message));
+        }
+
+        function logout() {
+            fetch('/api/logout').then(() => window.location.href = '/');
+        }
+    </script>
+</body>
+</html>

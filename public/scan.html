@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Scan Attendance | Smart Attendance</title>
-    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/styles-professional.css">
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="icon" href="images/college-logo.jpg" type="image/jpg">
@@ -45,6 +45,8 @@
     <script>
         let scannedSessionId = null;
         let scannedToken = null;
+        let collegeLocation = { lat: 21.8934, lng: 86.9325 }; // Default: NIST Berhampur coordinates
+        const ALLOWED_RADIUS = 500; // meters
 
         (async () => {
             const res = await fetch('/api/session', { credentials: 'same-origin' });
@@ -55,25 +57,94 @@
                 location.href = '/face-verify.html';
                 return;
             }
+
+            // Load college location from settings
+            const settings = JSON.parse(localStorage.getItem('ait-settings') || '{}');
+            if (settings.collegeLocation) {
+                collegeLocation = settings.collegeLocation;
+            }
+
+            // Check geofencing
+            checkLocation();
         })();
 
-        const html5Qrcode = new Html5Qrcode("qr-reader");
-        html5Qrcode.start(
-            { facingMode: "environment" },
-            { fps: 10, qrbox: 280 },
-            (decodedText) => {
-                const data = JSON.parse(decodedText);
-                scannedSessionId = data.sessionId;
-                scannedToken = data.token;
-                
-                document.getElementById('qrResult').innerHTML = `✓ QR Scanned! Session: ${scannedSessionId}`;
-                document.getElementById('qrResult').classList.remove('hidden');
-                
-                html5Qrcode.stop();
-                markAttendance();
-            },
-            (error) => {}
-        ).catch(err => console.error(err));
+        function checkLocation() {
+            if (!navigator.geolocation) {
+                showGeofenceError('Geolocation is not supported by your browser.');
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const distance = calculateDistance(
+                        position.coords.latitude,
+                        position.coords.longitude,
+                        collegeLocation.lat,
+                        collegeLocation.lng
+                    );
+                    
+                    if (distance > ALLOWED_RADIUS) {
+                        showGeofenceError(`You are ${Math.round(distance)}m away from campus. You must be within ${ALLOWED_RADIUS}m to mark attendance.`);
+                    } else {
+                        initializeScanner();
+                    }
+                },
+                (error) => {
+                    if (error.code === error.PERMISSION_DENIED) {
+                        showGeofenceError('Location access denied. Please enable location services to mark attendance.');
+                    } else {
+                        showGeofenceError('Unable to get your location. Please try again.');
+                    }
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        }
+
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371e3; // Earth's radius in meters
+            const φ1 = lat1 * Math.PI/180;
+            const φ2 = lat2 * Math.PI/180;
+            const Δφ = (lat2-lat1) * Math.PI/180;
+            const Δλ = (lon2-lon1) * Math.PI/180;
+
+            const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                      Math.cos(φ1) * Math.cos(φ2) *
+                      Math.sin(Δλ/2) * Math.sin(Δλ/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+            return R * c; // Distance in meters
+        }
+
+        function showGeofenceError(message) {
+            document.getElementById('qr-reader').innerHTML = `
+                <div style="padding: 40px 20px; text-align: center;">
+                    <div style="font-size: 64px; margin-bottom: 16px;">📍</div>
+                    <h3 style="color: #dc2626; margin-bottom: 8px;">Location Verification Failed</h3>
+                    <p style="color: var(--gray-600);">${message}</p>
+                    <button onclick="location.reload()" class="btn-secondary" style="margin-top: 16px;">Retry</button>
+                </div>
+            `;
+        }
+
+        function initializeScanner() {
+            const html5Qrcode = new Html5Qrcode("qr-reader");
+            html5Qrcode.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: 280 },
+                (decodedText) => {
+                    const data = JSON.parse(decodedText);
+                    scannedSessionId = data.sessionId;
+                    scannedToken = data.token;
+                    
+                    document.getElementById('qrResult').innerHTML = `✓ QR Scanned! Session: ${scannedSessionId}`;
+                    document.getElementById('qrResult').classList.remove('hidden');
+                    
+                    html5Qrcode.stop();
+                    markAttendance();
+                },
+                (error) => {}
+            ).catch(err => console.error(err));
+        }
 
         async function markAttendance() {
             const markDiv = document.getElementById('markAttendance');
