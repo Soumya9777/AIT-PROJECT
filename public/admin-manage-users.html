@@ -228,8 +228,29 @@
         let faceStream = null;
         let faceUsersWithFaces = new Set();
 
-        const CANVAS_W = 224;
-        const CANVAS_H = 224;
+        const CANVAS_W = 160;
+        const CANVAS_H = 160;
+
+        // Preload models immediately on page load
+        (async () => {
+            const res = await fetch('/api/session', { credentials: 'same-origin' });
+            const data = await res.json();
+            if (!data.role || data.role !== 'admin') location.href = '/';
+
+            // Load models in background immediately
+            try {
+                await Promise.all([
+                    faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
+                    faceapi.nets.faceRecognitionNet.loadFromUri('/models'),
+                    faceapi.nets.faceLandmark68Net.loadFromUri('/models')
+                ]);
+                faceLoaded = true;
+            } catch(e) {
+                console.error('Failed to preload face models:', e);
+            }
+
+            loadUsers();
+        })();
 
         async function loadSections(selectId) {
             const res = await fetch('/api/sections', { credentials: 'same-origin' });
@@ -346,13 +367,13 @@
             document.getElementById('faceModalTitle').textContent = hasFace ? 'Update Face Data' : 'Add Face Data';
             document.getElementById('faceUserName').textContent = userName;
             document.getElementById('faceModal').classList.add('show');
-            document.getElementById('faceStatus').textContent = 'Loading face detection models...';
-            document.getElementById('faceStatus').style.color = 'var(--gray-500)';
             document.getElementById('captureBtn').style.display = 'none';
             document.getElementById('saveBtn').style.display = 'none';
             document.getElementById('faceMsg').classList.add('hidden');
 
             if (!faceLoaded) {
+                document.getElementById('faceStatus').textContent = 'Loading models... Please wait.';
+                document.getElementById('faceStatus').style.color = 'var(--gray-500)';
                 try {
                     await Promise.all([
                         faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
@@ -404,7 +425,7 @@
 
                         try {
                             const detection = await faceapi.detectSingleFace(canvas,
-                                new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 }))
+                                new faceapi.TinyFaceDetectorOptions({ inputSize: 160, scoreThreshold: 0.5 }))
                                 .withFaceLandmarks().withFaceDescriptor();
 
                             if (detection) {
@@ -423,7 +444,7 @@
                             captureBtn.style.display = 'none';
                         }
                         detecting = false;
-                    }, 800);
+                    }, 300);
                 };
             } catch (err) {
                 faceStatus.textContent = 'Camera access denied. Please allow camera.';
@@ -489,13 +510,6 @@
                 card.style.display = card.textContent.toLowerCase().includes(query) ? '' : 'none';
             });
         }
-
-        (async () => {
-            const res = await fetch('/api/session', { credentials: 'same-origin' });
-            const data = await res.json();
-            if (!data.role || data.role !== 'admin') location.href = '/';
-            loadUsers();
-        })();
     </script>
 </body>
 </html>
