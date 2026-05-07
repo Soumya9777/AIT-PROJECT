@@ -183,6 +183,22 @@ app.delete('/api/users/:id', requireAuth, requireRole('admin'), (req, res) => {
     });
 });
 
+app.put('/api/users/:id', requireAuth, requireRole('admin'), (req, res) => {
+    const userId = parseInt(req.params.id);
+    const { name, username, role, section } = req.body;
+    
+    if (!name || !username || !role) {
+        return res.status(400).json({ error: 'Name, username, and role required' });
+    }
+    
+    db.run("UPDATE users SET name = ?, username = ?, role = ?, section = ? WHERE id = ?",
+        [name, username, role, section || null, userId], function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            if (this.changes === 0) return res.status(404).json({ error: 'User not found' });
+            res.json({ message: 'User updated' });
+        });
+});
+
 // ============ FACE DATA API ============
 
 app.post('/api/faces', requireAuth, (req, res) => {
