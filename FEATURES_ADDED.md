@@ -68,15 +68,6 @@
   - `GET /api/notifications/unread-count` - Get unread count
 - **Frontend Page**: `notifications.html` - Full notification management
 
-### 7. Geofencing Support
-- **Features**:
-  - Location verification before allowing attendance marking
-  - Configurable college location (lat/lng) in settings
-  - Adjustable allowed radius (meters)
-  - Haversine formula for distance calculation
-- **Settings UI**: Added to `admin-settings.html`
-- **Implementation**: Integrated into `scan.html`
-
 ### 8. Enhanced Login Page
 - **Remember Me**: Checkbox to remember username in localStorage
 - **Password Strength Indicator**: Real-time feedback when changing passwords
@@ -108,8 +99,8 @@ ALTER TABLE attendance_records ADD COLUMN status TEXT DEFAULT 'present';
 - `public/admin.html` - Added links to new features, notification bell
 - `public/teacher.html` - Added links to new features, notification bell
 - `public/student.html` - Added links to new features, notification bell
-- `public/admin-settings.html` - Added backup UI, geofencing settings
-- `public/scan.html` - Added geofencing verification
+- `public/admin-settings.html` - Added backup UI
+- `public/scan.html` - QR code scanner
 - `public/index.html` - Added "Remember Me" checkbox
 - `public/js/app.js` - Added password strength, remember me logic
 
