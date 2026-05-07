@@ -227,6 +227,14 @@ app.get('/api/faces', requireAuth, (req, res) => {
     });
 });
 
+app.get('/api/face/my-face', requireAuth, (req, res) => {
+    db.get("SELECT descriptor FROM face_descriptors WHERE user_id = ?", [req.session.userId], (err, row) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (!row) return res.status(404).json({ error: 'No face data registered for your account' });
+        res.json({ descriptor: JSON.parse(row.descriptor) });
+    });
+});
+
 app.get('/api/users/without-faces', requireAuth, requireRole('admin'), (req, res) => {
     db.all("SELECT id, name, role FROM users WHERE id NOT IN (SELECT user_id FROM face_descriptors)", (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });

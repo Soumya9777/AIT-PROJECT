@@ -52,7 +52,9 @@
         let faceDescriptor = null;
         let detectionInterval = null;
         let currentUser = null;
-        const VERIFY_THRESHOLD = 0.5;
+        let myStoredDescriptor = null;
+        let faceLoaded = false;
+        const VERIFY_THRESHOLD = 0.55;
 
         (async () => {
             const sessionRes = await fetch('/api/session', { credentials: 'same-origin' });
@@ -65,12 +67,34 @@
 
             document.getElementById('currentUserDisplay').textContent = currentUser.name;
 
+            // Load my face data
+            try {
+                const faceRes = await fetch('/api/face/my-face', { credentials: 'same-origin' });
+                if (faceRes.ok) {
+                    const faceData = await faceRes.json();
+                    myStoredDescriptor = faceData.descriptor;
+                } else {
+                    document.getElementById('faceStatus').textContent = 'No face data registered for your account. Contact admin to register your face.';
+                    document.getElementById('faceStatus').style.background = '#fee2e2';
+                    document.getElementById('faceStatus').style.color = '#991b1b';
+                    return;
+                }
+            } catch (err) {
+                document.getElementById('faceStatus').textContent = 'Error loading face data.';
+                document.getElementById('faceStatus').style.background = '#fee2e2';
+                document.getElementById('faceStatus').style.color = '#991b1b';
+                return;
+            }
+
+            // Load face-api models
             await Promise.all([
                 faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
                 faceapi.nets.faceRecognitionNet.loadFromUri('/models'),
                 faceapi.nets.faceLandmark68Net.loadFromUri('/models')
             ]);
+            faceLoaded = true;
 
+            // Start camera
             const video = document.getElementById('faceVideo');
             const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 400, height: 300, facingMode: 'user' } });
             video.srcObject = stream;
@@ -83,8 +107,8 @@
             const canvas = document.getElementById('faceCanvas');
             const faceStatus = document.getElementById('faceStatus');
             
-            canvas.width = 224;
-            canvas.height = 224;
+            canvas.width = 160;
+            canvas.height = 160;
             
             let detecting = false;
             detectionInterval = setInterval(async () => {
@@ -92,11 +116,11 @@
                 detecting = true;
                 
                 const ctx = canvas.getContext('2d');
-                ctx.drawImage(video, 0, 0, 224, 224);
+                ctx.drawImage(video, 0, 0, 160, 160);
                 
                 try {
                     const detection = await faceapi.detectSingleFace(canvas, 
-                        new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 }))
+                        new faceapi.TinyFaceDetectorOptions({ inputSize: 160, scoreThreshold: 0.5 }))
                         .withFaceLandmarks()
                         .withFaceDescriptor();
                     
@@ -121,7 +145,7 @@
 
         async function verifyFace() {
             if (!faceDescriptor) {
-                alert('No face detected. Please position your face in the camera.');
+                alert('No face detected.');
                 return;
             }
 
@@ -134,73 +158,25 @@
             document.getElementById('verifyBtn').disabled = true;
 
             try {
-                const res = await fetch('/api/faces', { credentials: 'same-origin' });
-                const faces = await res.json();
-                
-                if (faces.length === 0) {
-                    verifyMsg.innerHTML = '<div class="text-danger">✗ No face data registered for any user! Contact admin to register your face first.</div>';
-                    return;
+                // Compare ONLY against MY registered face
+                const distance = faceDistance(myStoredDescriptor, faceDescriptor);
+                console.log('Face verification - My face distance:', distance.toFixed(3), 'Threshold:', VERIFY_THRESHOLD);
+
+                if (distance <= VERIFY_THRESHOLD) {
+                    verifyMsg.innerHTML = `<div class="text-success">✓ Face verified as ${currentUser.name}! (distance: ${distance.toFixed(3)}) Redirecting...</div>`;
+                    
+                    await fetch('/api/face-verify', {
+                        method: 'POST',
+                        credentials: 'same-origin'
+                    });
+                    
+                    setTimeout(() => {
+                        location.href = 'student.html';
+                    }, 1500);
+                } else {
+                    verifyMsg.innerHTML = `<div class="text-danger">✗ Face not recognized. Distance ${distance.toFixed(3)} exceeds threshold ${VERIFY_THRESHOLD}. Please try again or contact admin to re-register your face.</div>`;
+                    document.getElementById('verifyBtn').disabled = false;
                 }
-
-                // Compare against ALL registered faces
-                let matches = [];
-                for (const f of faces) {
-                    const dist = faceDistance(f.descriptor, faceDescriptor);
-                    matches.push({ userId: f.user_id, name: f.name, distance: dist });
-                }
-
-                // Sort by distance (closest first)
-                matches.sort((a, b) => a.distance - b.distance);
-
-                const closest = matches[0];
-
-                console.log('Face verification results:', matches.map(m => `${m.name}(ID:${m.userId}): ${m.distance.toFixed(3)}`).join(', '));
-                console.log('Current user ID:', currentUser.id, 'Closest match ID:', closest.userId);
-
-                const myId = Number(currentUser.id);
-                const matchId = Number(closest.userId);
-
-                // Check if the closest match is the current logged-in user
-                if (matchId !== myId) {
-                    // Check if there's actually a match to ME in the list
-                    const myMatch = matches.find(m => Number(m.userId) === myId);
-                    if (myMatch) {
-                        // My face is in the DB but someone else matched closer
-                        if (closest.distance < VERIFY_THRESHOLD) {
-                            verifyMsg.innerHTML = `<div class="text-danger">✗ Access Denied! This face looks more like <strong>${closest.name}</strong> (distance: ${closest.distance.toFixed(3)}) than you (distance: ${myMatch.distance.toFixed(3)}).</div>`;
-                        } else {
-                            // Nobody matches well, but at least try mine if it's close enough
-                            if (myMatch.distance <= VERIFY_THRESHOLD) {
-                                verifyMsg.innerHTML = `<div class="text-success">✓ Face verified as ${currentUser.name}! (distance: ${myMatch.distance.toFixed(3)}) Redirecting...</div>`;
-                                await fetch('/api/face-verify', { method: 'POST', credentials: 'same-origin' });
-                                setTimeout(() => { location.href = 'student.html'; }, 1500);
-                                return;
-                            }
-                            verifyMsg.innerHTML = `<div class="text-danger">✗ Access Denied! This face looks more like <strong>${closest.name}</strong>, not you.</div>`;
-                        }
-                    } else {
-                        verifyMsg.innerHTML = `<div class="text-danger">✗ Access Denied! This face matches <strong>${closest.name}</strong> (distance: ${closest.distance.toFixed(3)}), not your account.</div>`;
-                    }
-                    return;
-                }
-
-                // Check if the distance is within the strict threshold
-                if (closest.distance > VERIFY_THRESHOLD) {
-                    verifyMsg.innerHTML = `<div class="text-danger">✗ Face not recognized. Distance ${closest.distance.toFixed(3)} exceeds threshold ${VERIFY_THRESHOLD}.</div>`;
-                    return;
-                }
-
-                // Success
-                verifyMsg.innerHTML = `<div class="text-success">✓ Face verified as ${currentUser.name}! (distance: ${closest.distance.toFixed(3)}) Redirecting...</div>`;
-                
-                await fetch('/api/face-verify', {
-                    method: 'POST',
-                    credentials: 'same-origin'
-                });
-                
-                setTimeout(() => {
-                    location.href = 'student.html';
-                }, 1500);
             } catch (err) {
                 console.error(err);
                 verifyMsg.innerHTML = '<div class="text-danger">Error during verification. Please try again.</div>';
