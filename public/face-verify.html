@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="css/styles-professional.css">
     <script src="js/face-api.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="icon" href="images/college-logo.jpg" type="image/jpg">
+    <link rel="icon" href="images/college-logo.jpg" type="image/jpg">
     <script src="js/toast.js"></script>
 </head>
 <body>
@@ -16,19 +16,21 @@
             <div class="login-header">
                 <img src="images/college-logo.jpg" alt="College Logo" style="height: 100px; margin-bottom: 20px;">
                 <h2 style="color: white; font-size: 32px; font-weight: 900; margin-bottom: 12px;">Face Verification</h2>
-                <p style="opacity: 0.95; font-size: 18px;">Please verify your face to continue</p>
+                <p style="opacity: 0.95; font-size: 18px;">Logged in as: <strong id="currentUserDisplay"></strong></p>
             </div>
 
             <div class="login-body" style="text-align: center;">
-                <video id="faceVideo" width="320" height="240" autoplay style="max-width: 100%; height: auto; border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); margin-bottom: 20px;"></video>
+                <div class="face-video-wrapper">
+                    <video id="faceVideo" autoplay playsinline muted></video>
+                </div>
                 <canvas id="faceCanvas" style="display: none;"></canvas>
                 
                 <div id="faceStatus" style="margin: 20px 0; padding: 16px; border-radius: var(--radius-xs); font-weight: 600; font-size: 15px;">
                     Position your face in front of the camera...
                 </div>
                 
-                <button onclick="verifyFace()" id="verifyBtn" class="btn-primary" style="width: 100%; padding: 18px; font-size: 18px;">
-                    📷 Verify Face
+                <button onclick="verifyFace()" id="verifyBtn" class="btn-primary" style="width: 100%; padding: 18px; font-size: 18px;" disabled>
+                    Verify Face
                 </button>
                 
                 <div id="verifyMsg" style="margin-top: 20px;"></div>
@@ -40,10 +42,17 @@
         </div>
     </div>
 
+    <style>
+        .face-video-wrapper { width: 100%; max-width: 400px; margin: 0 auto 20px; border-radius: var(--radius-sm); overflow: hidden; border: 2px solid var(--gray-200); background: #000; }
+        #faceVideo { width: 100%; display: block; height: auto; }
+        #faceCanvas { display: none; }
+    </style>
+
     <script>
         let faceDescriptor = null;
         let detectionInterval = null;
         let currentUser = null;
+        const VERIFY_THRESHOLD = 0.5;
 
         (async () => {
             const sessionRes = await fetch('/api/session', { credentials: 'same-origin' });
@@ -54,6 +63,8 @@
                 return;
             }
 
+            document.getElementById('currentUserDisplay').textContent = currentUser.name;
+
             await Promise.all([
                 faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
                 faceapi.nets.faceRecognitionNet.loadFromUri('/models'),
@@ -61,7 +72,7 @@
             ]);
 
             const video = document.getElementById('faceVideo');
-            const stream = await navigator.mediaDevices.getUserMedia({video: {}});
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 400, height: 300, facingMode: 'user' } });
             video.srcObject = stream;
 
             startFaceDetection();
@@ -72,35 +83,40 @@
             const canvas = document.getElementById('faceCanvas');
             const faceStatus = document.getElementById('faceStatus');
             
-            video.width = 160;
-            video.height = 120;
-            canvas.width = 160;
-            canvas.height = 120;
+            canvas.width = 224;
+            canvas.height = 224;
             
+            let detecting = false;
             detectionInterval = setInterval(async () => {
-                if (video.readyState !== 4) return;
+                if (detecting || video.readyState < 2) return;
+                detecting = true;
                 
-                canvas.getContext('2d').drawImage(video, 0, 0, 160, 120);
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, 224, 224);
                 
-                const detection = await faceapi.detectSingleFace(canvas, 
-                    new faceapi.TinyFaceDetectorOptions({ inputSize: 160 }))
-                    .withFaceLandmarks()
-                    .withFaceDescriptor();
+                try {
+                    const detection = await faceapi.detectSingleFace(canvas, 
+                        new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 }))
+                        .withFaceLandmarks()
+                        .withFaceDescriptor();
+                    
+                    if (detection) {
+                        faceDescriptor = Array.from(detection.descriptor);
+                        faceStatus.textContent = '✓ Face detected — click Verify';
+                        faceStatus.style.background = '#d1fae5';
+                        faceStatus.style.color = '#065f46';
+                        document.getElementById('verifyBtn').disabled = false;
+                    } else {
+                        faceDescriptor = null;
+                        faceStatus.textContent = 'Position your face in front of the camera...';
+                        faceStatus.style.background = '#f3f4f6';
+                        faceStatus.style.color = '#374151';
+                        document.getElementById('verifyBtn').disabled = true;
+                    }
+                } catch(e) {}
                 
-                if (detection) {
-                    faceDescriptor = Array.from(detection.descriptor);
-                    faceStatus.textContent = 'Face detected! Click Verify Face button.';
-                    faceStatus.style.background = '#d1fae5';
-                    faceStatus.style.color = '#065f46';
-                    document.getElementById('verifyBtn').disabled = false;
-                } else {
-                    faceDescriptor = null;
-                    faceStatus.textContent = 'Position your face in front of the camera...';
-                    faceStatus.style.background = '#f3f4f6';
-                    faceStatus.style.color = '#374151';
-                    document.getElementById('verifyBtn').disabled = true;
-                }
-            }, 300);
+                detecting = false;
+            }, 500);
         }
 
         async function verifyFace() {
@@ -115,41 +131,45 @@
             faceStatus.textContent = 'Verifying...';
             faceStatus.style.background = '#dbeafe';
             faceStatus.style.color = '#1e40af';
+            document.getElementById('verifyBtn').disabled = true;
 
             try {
                 const res = await fetch('/api/faces', { credentials: 'same-origin' });
                 const faces = await res.json();
                 
                 if (faces.length === 0) {
-                    verifyMsg.innerHTML = '<div class="text-danger">No face data registered! Contact admin.</div>';
+                    verifyMsg.innerHTML = '<div class="text-danger">✗ No face data registered for any user! Contact admin to register your face first.</div>';
                     return;
                 }
 
-                // Compare against ALL registered faces to find the closest match
-                let closestMatch = null;
-                let closestDistance = Infinity;
-
+                // Compare against ALL registered faces
+                let matches = [];
                 for (const f of faces) {
                     const dist = faceDistance(f.descriptor, faceDescriptor);
-                    if (dist < closestDistance) {
-                        closestDistance = dist;
-                        closestMatch = f;
-                    }
+                    matches.push({ userId: f.user_id, name: f.name, distance: dist });
                 }
 
-                // Only accept if the closest match is the current logged-in user
-                if (closestMatch.userId !== currentUser.id) {
-                    verifyMsg.innerHTML = `<div class="text-danger">✗ Face not recognized. This face matches "${closestMatch.name}", not your account. Access denied.</div>`;
+                // Sort by distance (closest first)
+                matches.sort((a, b) => a.distance - b.distance);
+
+                const closest = matches[0];
+
+                console.log('Face verification results:', matches.map(m => `${m.name}: ${m.distance.toFixed(3)}`).join(', '));
+
+                // Check if the closest match is the current logged-in user
+                if (closest.userId !== currentUser.id) {
+                    verifyMsg.innerHTML = `<div class="text-danger">✗ Access Denied! This face matches <strong>${closest.name}</strong> (distance: ${closest.distance.toFixed(3)}), not your account <strong>${currentUser.name}</strong>.</div>`;
                     return;
                 }
 
-                // Also check the distance threshold
-                if (closestDistance > 0.6) {
-                    verifyMsg.innerHTML = '<div class="text-danger">✗ Face verification failed. Not recognized.</div>';
+                // Check if the distance is within the strict threshold
+                if (closest.distance > VERIFY_THRESHOLD) {
+                    verifyMsg.innerHTML = `<div class="text-danger">✗ Face not recognized. Distance ${closest.distance.toFixed(3)} exceeds threshold ${VERIFY_THRESHOLD}. This does not match your registered face.</div>`;
                     return;
                 }
 
-                verifyMsg.innerHTML = '<div class="text-success">✓ Face verified! Redirecting...</div>';
+                // Success
+                verifyMsg.innerHTML = `<div class="text-success">✓ Face verified as ${currentUser.name}! (distance: ${closest.distance.toFixed(3)}) Redirecting...</div>`;
                 
                 await fetch('/api/face-verify', {
                     method: 'POST',
@@ -158,9 +178,11 @@
                 
                 setTimeout(() => {
                     location.href = 'student.html';
-                }, 1000);
+                }, 1500);
             } catch (err) {
-                verifyMsg.innerHTML = '<div class="text-danger">Error during verification.</div>';
+                console.error(err);
+                verifyMsg.innerHTML = '<div class="text-danger">Error during verification. Please try again.</div>';
+                document.getElementById('verifyBtn').disabled = false;
             }
         }
 
