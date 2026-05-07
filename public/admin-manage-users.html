@@ -228,7 +228,7 @@
         .modal-body { padding: 24px; }
         .modal-user-name { font-size: 16px; font-weight: 600; color: var(--gray-600); margin-bottom: 20px; }
         .face-capture-area { text-align: center; }
-        #faceVideo { width: 100%; max-width: 400px; border-radius: var(--radius-sm); background: var(--gray-100); border: 2px solid var(--gray-200); }
+        #faceVideo { width: 100%; max-width: 400px; border-radius: var(--radius-sm); background: #000; border: 2px solid var(--gray-200); display: block; margin: 0 auto; }
         .face-status { margin-top: 16px; font-size: 14px; color: var(--gray-500); font-weight: 500; }
         .face-actions { margin-top: 20px; }
         .modal-footer { padding: 16px 24px; border-top: 1px solid var(--gray-200); display: flex; justify-content: flex-end; gap: 12px; }
@@ -466,17 +466,24 @@
                 video.srcObject = stream;
                 
                 video.onloadedmetadata = () => {
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
+                    const w = video.videoWidth;
+                    const h = video.videoHeight;
+                    canvas.width = w;
+                    canvas.height = h;
+                    video.width = w;
+                    video.height = h;
                     faceStatus.textContent = 'Position your face in the camera...';
                     
+                    let detecting = false;
                     detectionInterval = setInterval(async () => {
-                        if (video.readyState !== 4) return;
+                        if (detecting || video.readyState !== 4) return;
+                        detecting = true;
+                        
                         const ctx = canvas.getContext('2d');
-                        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                        ctx.drawImage(video, 0, 0, w, h);
                         
                         const detection = await faceapi.detectSingleFace(canvas, 
-                            new faceapi.TinyFaceDetectorOptions({ inputSize: 224 }))
+                            new faceapi.TinyFaceDetectorOptions({ inputSize: 320 }))
                             .withFaceLandmarks().withFaceDescriptor();
                         
                         if (detection) {
@@ -490,7 +497,9 @@
                             faceStatus.textContent = 'Position your face in the camera...';
                             faceStatus.style.color = 'var(--gray-500)';
                         }
-                    }, 200);
+                        
+                        detecting = false;
+                    }, 500);
                 };
             } catch (err) {
                 faceStatus.textContent = 'Camera access denied.';
