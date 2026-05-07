@@ -313,7 +313,7 @@
 
             if (!name || !username || !password) return alert('All fields required');
 
-            const res = await fetch('/api/users/register', {
+            const res = await fetch('/api/users', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name, username, password, role, section }),
