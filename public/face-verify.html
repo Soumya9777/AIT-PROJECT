@@ -154,17 +154,39 @@
 
                 const closest = matches[0];
 
-                console.log('Face verification results:', matches.map(m => `${m.name}: ${m.distance.toFixed(3)}`).join(', '));
+                console.log('Face verification results:', matches.map(m => `${m.name}(ID:${m.userId}): ${m.distance.toFixed(3)}`).join(', '));
+                console.log('Current user ID:', currentUser.id, 'Closest match ID:', closest.userId);
+
+                const myId = Number(currentUser.id);
+                const matchId = Number(closest.userId);
 
                 // Check if the closest match is the current logged-in user
-                if (closest.userId !== currentUser.id) {
-                    verifyMsg.innerHTML = `<div class="text-danger">✗ Access Denied! This face matches <strong>${closest.name}</strong> (distance: ${closest.distance.toFixed(3)}), not your account <strong>${currentUser.name}</strong>.</div>`;
+                if (matchId !== myId) {
+                    // Check if there's actually a match to ME in the list
+                    const myMatch = matches.find(m => Number(m.userId) === myId);
+                    if (myMatch) {
+                        // My face is in the DB but someone else matched closer
+                        if (closest.distance < VERIFY_THRESHOLD) {
+                            verifyMsg.innerHTML = `<div class="text-danger">✗ Access Denied! This face looks more like <strong>${closest.name}</strong> (distance: ${closest.distance.toFixed(3)}) than you (distance: ${myMatch.distance.toFixed(3)}).</div>`;
+                        } else {
+                            // Nobody matches well, but at least try mine if it's close enough
+                            if (myMatch.distance <= VERIFY_THRESHOLD) {
+                                verifyMsg.innerHTML = `<div class="text-success">✓ Face verified as ${currentUser.name}! (distance: ${myMatch.distance.toFixed(3)}) Redirecting...</div>`;
+                                await fetch('/api/face-verify', { method: 'POST', credentials: 'same-origin' });
+                                setTimeout(() => { location.href = 'student.html'; }, 1500);
+                                return;
+                            }
+                            verifyMsg.innerHTML = `<div class="text-danger">✗ Access Denied! This face looks more like <strong>${closest.name}</strong>, not you.</div>`;
+                        }
+                    } else {
+                        verifyMsg.innerHTML = `<div class="text-danger">✗ Access Denied! This face matches <strong>${closest.name}</strong> (distance: ${closest.distance.toFixed(3)}), not your account.</div>`;
+                    }
                     return;
                 }
 
                 // Check if the distance is within the strict threshold
                 if (closest.distance > VERIFY_THRESHOLD) {
-                    verifyMsg.innerHTML = `<div class="text-danger">✗ Face not recognized. Distance ${closest.distance.toFixed(3)} exceeds threshold ${VERIFY_THRESHOLD}. This does not match your registered face.</div>`;
+                    verifyMsg.innerHTML = `<div class="text-danger">✗ Face not recognized. Distance ${closest.distance.toFixed(3)} exceeds threshold ${VERIFY_THRESHOLD}.</div>`;
                     return;
                 }
 
