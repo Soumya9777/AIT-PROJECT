@@ -362,18 +362,25 @@
         }
 
         async function openFaceModal(userId, userName, hasFace) {
-            currentUserId = userId;
+            // Clean up any previous state
+            if (detectionInterval) { clearInterval(detectionInterval); detectionInterval = null; }
+            const video = document.getElementById('faceVideo');
+            if (video.srcObject) { video.srcObject.getTracks().forEach(t => t.stop()); video.srcObject = null; }
+            faceStream = null;
             faceDescriptor = null;
+
+            currentUserId = userId;
             document.getElementById('faceModalTitle').textContent = hasFace ? 'Update Face Data' : 'Add Face Data';
             document.getElementById('faceUserName').textContent = userName;
-            document.getElementById('faceModal').classList.add('show');
             document.getElementById('captureBtn').style.display = 'none';
             document.getElementById('saveBtn').style.display = 'none';
             document.getElementById('faceMsg').classList.add('hidden');
+            document.getElementById('faceStatus').textContent = 'Loading camera...';
+            document.getElementById('faceStatus').style.color = 'var(--gray-500)';
+            document.getElementById('faceModal').classList.add('show');
 
             if (!faceLoaded) {
                 document.getElementById('faceStatus').textContent = 'Loading models... Please wait.';
-                document.getElementById('faceStatus').style.color = 'var(--gray-500)';
                 try {
                     await Promise.all([
                         faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
@@ -393,9 +400,13 @@
         function closeFaceModal() {
             document.getElementById('faceModal').classList.remove('show');
             if (detectionInterval) { clearInterval(detectionInterval); detectionInterval = null; }
-            if (faceStream) { faceStream.getTracks().forEach(t => t.stop()); faceStream = null; }
             const video = document.getElementById('faceVideo');
-            video.srcObject = null;
+            if (video.srcObject) {
+                video.srcObject.getTracks().forEach(t => t.stop());
+                video.srcObject = null;
+            }
+            faceStream = null;
+            faceDescriptor = null;
         }
 
         async function startFaceCapture() {
@@ -404,6 +415,15 @@
             const captureBtn = document.getElementById('captureBtn');
             const faceStatus = document.getElementById('faceStatus');
 
+            // Ensure clean state
+            if (video.srcObject) {
+                video.srcObject.getTracks().forEach(t => t.stop());
+                video.srcObject = null;
+            }
+            if (detectionInterval) { clearInterval(detectionInterval); detectionInterval = null; }
+            faceDescriptor = null;
+            captureBtn.style.display = 'none';
+
             canvas.width = CANVAS_W;
             canvas.height = CANVAS_H;
 
@@ -411,7 +431,7 @@
                 faceStream = await navigator.mediaDevices.getUserMedia({ video: { width: 400, height: 300, facingMode: 'user' } });
                 video.srcObject = faceStream;
 
-                video.onloadedmetadata = () => {
+                video.onplaying = () => {
                     faceStatus.textContent = 'Position your face in the camera...';
                     faceStatus.style.color = 'var(--gray-500)';
 
@@ -449,6 +469,7 @@
             } catch (err) {
                 faceStatus.textContent = 'Camera access denied. Please allow camera.';
                 faceStatus.style.color = 'var(--danger)';
+                console.error('Camera error:', err);
             }
         }
 
